@@ -1,0 +1,10 @@
+version: "2"
+sql:
+  - engine: "sqlite"
+    schema: "sql/migrations"
+    queries: "sql/queries"
+    gen:
+      go:
+        package: "gen"
+        sql_package: "eatonphil/gosqlite"
+        out: "gen"
