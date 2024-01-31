@@ -1,5 +1,5 @@
 package ksqlite
 
-func AddLocale() error {
-	return nil
+func GetLang(name string) (int64, error) {
+	return RQueryOne[int64]("select id from langs where name like ?", name)
 }

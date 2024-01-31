@@ -47,8 +47,8 @@ create table foods_details (
 	source_id integer references sources(id),
 	-- nutrients, all per gram
 	kcal real not null,
-	primary key(food_id, user_id, source_id)
-) without rowid;
+	unique(food_id, user_id, source_id)
+);
 
 create table foods_images (
 	id integer primary key,

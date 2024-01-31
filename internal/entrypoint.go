@@ -39,8 +39,6 @@ func Entrypoint(run func(context.Context) error) {
 	if err := entrypoint(ctx, run); err != nil {
 		os.Exit(1)
 	}
-
-	os.Exit(0)
 }
 
 func entrypoint(

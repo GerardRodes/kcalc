@@ -67,12 +67,15 @@ func RunMigrations() (outErr error) {
 			return fmt.Errorf("read migration: %w", err)
 		}
 
-		sql := fmt.Sprintf("BEGIN TRANSACTION;%s;PRAGMA user_version=%d;COMMIT;", string(data), version)
+		sql := fmt.Sprintf("BEGIN;%s;PRAGMA user_version=%d;COMMIT;", string(data), version)
 		if err := w.conn.Exec(sql); err != nil {
 			return fmt.Errorf("apply migration: %w", err)
 		}
 
-		log.Debug().Str("migration", entry.Name()).Msg("applied migration")
+		log.Debug().
+			Str("migration", entry.Name()).
+			Int("version", version).
+			Msg("applied migration")
 	}
 
 	return nil

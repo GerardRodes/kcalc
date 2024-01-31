@@ -3,16 +3,16 @@ package internal
 type (
 	Food struct {
 		ID                 int64
-		DetailsFromSources map[int64]FoodsDetail
-		DetailsFromUsers   map[int64]FoodsDetail
-		ImagesFromSources  map[int64]FoodsImage
-		ImagesFromUsers    map[int64]FoodsImage
-		Locales            map[int64]string
+		DetailsFromSources map[ /*source_id*/ int64][]FoodDetail
+		ImagesFromSources  map[ /*source_id*/ int64][]FoodImage
+		DetailsFromUsers   map[ /*user_id*/ int64][]FoodDetail
+		ImagesFromUsers    map[ /*user_id*/ int64][]FoodImage
+		Locales            map[ /*lang_id*/ int64]Locale
 	}
-	FoodsDetail struct {
-		Kcal float64
+	FoodDetail struct {
+		KCal float64
 	}
-	FoodsImage struct {
+	FoodImage struct {
 		Type   string
 		Width  int64
 		Height int64

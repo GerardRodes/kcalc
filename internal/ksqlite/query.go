@@ -56,7 +56,7 @@ func Query[T any](c *Conn, sql string, args ...any) (rows []T, err error) {
 	var fieldPtrs []any
 	isStruct := reflect.TypeOf(zero).Kind() == reflect.Struct
 	if isStruct {
-		fieldPtrs = make([]any, reflect.ValueOf(zero).Elem().NumField())
+		fieldPtrs = make([]any, reflect.ValueOf(zero).NumField())
 	} else {
 		fieldPtrs = make([]any, 1)
 	}
@@ -74,7 +74,7 @@ func Query[T any](c *Conn, sql string, args ...any) (rows []T, err error) {
 		var row T
 
 		if isStruct {
-			elem := reflect.ValueOf(row).Elem()
+			elem := reflect.ValueOf(&row).Elem()
 			for i := 0; i < elem.NumField(); i++ {
 				fieldPtrs[i] = elem.Field(i).Addr().Interface()
 			}
@@ -91,4 +91,20 @@ func Query[T any](c *Conn, sql string, args ...any) (rows []T, err error) {
 	}
 
 	return
+}
+
+func Exec(sql string, args ...any) error {
+	c, unlock := WConn()
+	defer unlock()
+
+	stmt, err := c.Prepare(sql, args...)
+	if err != nil {
+		return fmt.Errorf("prepare: %w", err)
+	}
+
+	if err := stmt.Exec(args...); err != nil {
+		return fmt.Errorf("exec stmt: %w", err)
+	}
+
+	return nil
 }

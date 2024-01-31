@@ -15,7 +15,8 @@ type (
 		Name string
 	}
 	Locale struct {
-		ID    int64
-		Value string
+		ID     int64
+		Value  string
+		Normal string
 	}
 )

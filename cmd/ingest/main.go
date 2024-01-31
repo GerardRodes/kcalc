@@ -10,22 +10,33 @@ import (
 	"github.com/GerardRodes/kcalc/internal"
 	"github.com/GerardRodes/kcalc/internal/ksqlite"
 	"github.com/GerardRodes/kcalc/internal/nutritionix"
+	"github.com/rs/zerolog/log"
 )
 
-var argDBPath = flag.String("db-path", "", "")
+var argRootDir = flag.String("root-dir", "", "")
 
 func main() {
 	internal.Entrypoint(run)
 }
 
 func run(ctx context.Context) error {
-	if *argDBPath != "" {
-		if err := os.MkdirAll(filepath.Dir(*argDBPath), os.ModePerm); err != nil {
+	rootDir := *argRootDir
+	if rootDir != "" {
+		if err := os.MkdirAll(filepath.Dir(rootDir), os.ModePerm); err != nil {
 			return fmt.Errorf("make dir for db: %w", err)
+		}
+	} else {
+		var err error
+		rootDir, err = os.MkdirTemp("", "kcalc_*")
+		if err != nil {
+			return fmt.Errorf("mkdir temp: %w", err)
 		}
 	}
 
-	if err := ksqlite.InitGlobals(*argDBPath, 1); err != nil {
+	log.Debug().Str("root_dir", rootDir).Msg("run")
+	defer log.Debug().Str("root_dir", rootDir).Msg("run end")
+
+	if err := ksqlite.InitGlobals(filepath.Join(rootDir, "kcalc.db"), 1); err != nil {
 		return fmt.Errorf("init ksqlite globals: %w", err)
 	}
 

@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"unicode"
 
@@ -14,7 +15,9 @@ var chains = &sync.Pool{
 	New: func() any {
 		return transform.Chain(
 			norm.NFD,
-			runes.Remove(runes.In(unicode.Mn)),
+			runes.Remove(runes.Predicate(func(r rune) bool {
+				return !unicode.In(r, unicode.Number, unicode.Letter)
+			})),
 			norm.NFC,
 		)
 	},
@@ -32,5 +35,13 @@ func NormalizeStr(v string) (string, error) {
 		return "", fmt.Errorf("normalize string %w", err)
 	}
 
-	return result, nil
+	return strings.ToLower(result), nil
+}
+
+func MustNormalizeStr(v string) string {
+	out, err := NormalizeStr(v)
+	if err != nil {
+		panic("normalize str: " + err.Error())
+	}
+	return out
 }

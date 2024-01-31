@@ -12,7 +12,6 @@ import (
 
 	"github.com/GerardRodes/kcalc/internal"
 	"github.com/GerardRodes/kcalc/internal/ksqlite"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 )
 
@@ -39,13 +38,10 @@ func Ingest(ctx context.Context, jsonsDir string) error {
 		return fmt.Errorf("read dir: %w", err)
 	}
 
-	source, err := ksqlite.AddSource(internal.Source{Name: "nutritionix"})
+	sourceID, err := ksqlite.AddSource(internal.Source{Name: "nutritionix"})
 	if err != nil {
 		return fmt.Errorf("add source: %w", err)
 	}
-
-	spew.Dump(source)
-	return nil
 
 	for idx, c := range children {
 		if c.IsDir() {
@@ -64,6 +60,22 @@ func Ingest(ctx context.Context, jsonsDir string) error {
 			continue
 		}
 
+		const prefix = len("httpswwwnutritionixcomnixapisearches")
+		lang := strings.ToLower(c.Name()[prefix : prefix+2])
+		switch lang {
+		case "gb", "us":
+			lang = "en_" + lang
+		case "es", "mx":
+			lang = "es_" + lang
+		default:
+			return fmt.Errorf("unknown lang %q", lang)
+		}
+
+		langID, err := ksqlite.GetLang(lang)
+		if err != nil {
+			return fmt.Errorf("get lang: %w", err)
+		}
+
 		f, err := os.Open(path.Join(jsonsDir, c.Name()))
 		if err != nil {
 			return fmt.Errorf("open %q: %w", c.Name(), err)
@@ -74,20 +86,31 @@ func Ingest(ctx context.Context, jsonsDir string) error {
 			return fmt.Errorf("decoding %q: %w", c.Name(), err)
 		}
 
-		// foods := make([]internal.Food, 0, len(data.Foods))
-		// for _, sourceFood := range data.Foods {
-		// 	food := internal.Food{
-		// 		DetailsFromSources: map[int64]internal.FoodsDetail{
-		// 			"nutritionix": {},
-		// 		},
-		// 	}
+		foods := make([]internal.Food, 0, len(data.Foods))
+		for _, srcFood := range data.Foods {
+			var foodDetail internal.FoodDetail
 
-		// 	foods = append(foods, food)
-		// }
+			if srcFood.ServingWeightGrams > 0 {
+				foodDetail.KCal = float64(srcFood.Calories) / float64(srcFood.ServingWeightGrams)
+			}
 
-		// if err := ksqlite.AddFoods(foods...); err != nil {
-		// 	return fmt.Errorf("add foods: %w", err)
-		// }
+			foods = append(foods, internal.Food{
+				DetailsFromSources: map[int64][]internal.FoodDetail{
+					sourceID: {foodDetail},
+				},
+				ImagesFromSources: map[int64][]internal.FoodImage{},
+				Locales: map[int64]internal.Locale{
+					langID: {
+						Value:  srcFood.Name,
+						Normal: internal.MustNormalizeStr(srcFood.Name),
+					},
+				},
+			})
+		}
+
+		if err := ksqlite.AddFoods(foods...); err != nil {
+			return fmt.Errorf("add foods: %w", err)
+		}
 
 		log.Info().
 			Int("total", len(children)).
