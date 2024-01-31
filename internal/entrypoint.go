@@ -16,7 +16,10 @@ import (
 	"go.uber.org/automaxprocs/maxprocs"
 )
 
-var IsProd = false
+var (
+	argLogLVL = flag.String("log-lvl", "debug", "")
+	IsProd    = false
+)
 
 func Entrypoint(run func(context.Context) error) {
 	flag.Parse()
@@ -27,10 +30,15 @@ func Entrypoint(run func(context.Context) error) {
 	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
 
 	if IsProd {
-		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
 	} else {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+		lvl, err := zerolog.ParseLevel(*argLogLVL)
+		if err != nil {
+			log.Err(err).Msg("parse zerolog lvl")
+			os.Exit(1)
+		}
+		zerolog.SetGlobalLevel(lvl)
 	}
 
 	log.Print("🚀 starting")

@@ -5,6 +5,7 @@ import (
 
 	"github.com/GerardRodes/kcalc/internal"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/rs/zerolog/log"
 )
 
 func AddFoods(foods ...internal.Food) error {
@@ -35,18 +36,23 @@ func AddFood(food internal.Food) error {
 			} else if len(rows) == 1 {
 				collisionFoodIDs = append(collisionFoodIDs, rows[0].FoodID)
 			} else if len(rows) > 1 {
-				// todo:
-				spew.Dump(food, rows, locale)
-				panic("food collision")
+				// todo: merge
+				log.Debug().
+					Int("lang_id", int(langID)).
+					Str("value_normal", locale.Normal).
+					Msg("food collision")
+				return nil
 			}
 		}
 	}
 
 	var foodID int64
 	if len(collisionFoodIDs) > 1 {
-		// todo:
-		spew.Dump(food, collisionFoodIDs)
-		panic("outer food collision")
+		// todo: merge
+		log.Debug().
+			Ints64("food ids", collisionFoodIDs).
+			Msg("food collision")
+		return nil
 	} else if len(collisionFoodIDs) == 1 {
 		foodID = collisionFoodIDs[0]
 	} else {
@@ -61,6 +67,20 @@ func AddFood(food internal.Food) error {
 		for _, detail := range details {
 			if err := AddFoodDetailFromSource(foodID, sourceID, detail); err != nil {
 				return fmt.Errorf("food(%d) source(%d) add food detail: %w", foodID, sourceID, err)
+			}
+		}
+	}
+
+	for sourceID, imgs := range food.ImagesFromSources {
+		for _, img := range imgs {
+			err := Exec(`
+				insert into foods_images
+				(food_id, source_id, height, width, uri)
+				values (?, ?, ?, ?, ?);
+			`, foodID, sourceID, img.Height, img.Width, img.URI)
+			if err != nil {
+				spew.Dump(foodID, sourceID, img.Height, img.Width, img.URI)
+				return fmt.Errorf("food(%d) source(%d) add food image: %w", foodID, sourceID, err)
 			}
 		}
 	}

@@ -14,6 +14,7 @@ func Ingest(ctx context.Context, csvPath string) error {
 	if err != nil {
 		return fmt.Errorf("cannot open file: %w", err)
 	}
+	defer f.Close()
 
 	r := csv.NewReader(f)
 	r.FieldsPerRecord = 37
