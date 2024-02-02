@@ -40,7 +40,7 @@ func run(ctx context.Context) error {
 	log.Debug().Str("root_dir", rootDir).Msg("run")
 	defer log.Debug().Str("root_dir", rootDir).Msg("run end")
 
-	if err := ksqlite.InitGlobals(filepath.Join(rootDir, "kcalc.db"), 1); err != nil {
+	if err := ksqlite.InitGlobals(filepath.Join(rootDir, "kcalc.db"), 1, true); err != nil {
 		return fmt.Errorf("init ksqlite globals: %w", err)
 	}
 

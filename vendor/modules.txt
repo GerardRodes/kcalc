@@ -4,6 +4,12 @@ github.com/davecgh/go-spew/spew
 # github.com/eatonphil/gosqlite v0.9.0
 ## explicit; go 1.20
 github.com/eatonphil/gosqlite
+# github.com/julienschmidt/httprouter v1.3.0
+## explicit; go 1.7
+github.com/julienschmidt/httprouter
+# github.com/jxskiss/base62 v1.1.0
+## explicit; go 1.13
+github.com/jxskiss/base62
 # github.com/kolesa-team/go-webp v1.0.4
 ## explicit; go 1.10
 github.com/kolesa-team/go-webp/decoder
@@ -22,9 +28,6 @@ github.com/rs/zerolog
 github.com/rs/zerolog/internal/cbor
 github.com/rs/zerolog/internal/json
 github.com/rs/zerolog/log
-# github.com/segmentio/ksuid v1.0.4
-## explicit; go 1.12
-github.com/segmentio/ksuid
 # go.uber.org/automaxprocs v1.5.3
 ## explicit; go 1.18
 go.uber.org/automaxprocs/internal/cgroups

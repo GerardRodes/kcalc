@@ -49,7 +49,7 @@ func RQuery[T any](sql string, args ...any) (rows []T, err error) {
 func Query[T any](c *Conn, sql string, args ...any) (rows []T, err error) {
 	stmt, err := c.Prepare(sql, args...)
 	if err != nil {
-		return nil, fmt.Errorf("prepare: %w", err)
+		return nil, fmt.Errorf("prepare: %w", internal.NewErrWithStackTrace(err))
 	}
 
 	var zero T
@@ -64,7 +64,7 @@ func Query[T any](c *Conn, sql string, args ...any) (rows []T, err error) {
 	for {
 		hasRow, err := stmt.Step()
 		if err != nil {
-			return nil, fmt.Errorf("step stmt: %w", err)
+			return nil, fmt.Errorf("step stmt: %w", internal.NewErrWithStackTrace(err))
 		}
 		if !hasRow {
 			// The query is finished
@@ -84,7 +84,7 @@ func Query[T any](c *Conn, sql string, args ...any) (rows []T, err error) {
 
 		err = stmt.Scan(fieldPtrs...)
 		if err != nil {
-			return nil, fmt.Errorf("scan stmt: %w", err)
+			return nil, fmt.Errorf("scan stmt: %w", internal.NewErrWithStackTrace(err))
 		}
 
 		rows = append(rows, row)
@@ -99,11 +99,11 @@ func Exec(sql string, args ...any) error {
 
 	stmt, err := c.Prepare(sql, args...)
 	if err != nil {
-		return fmt.Errorf("prepare: %w", err)
+		return fmt.Errorf("prepare: %w", internal.NewErrWithStackTrace(err))
 	}
 
 	if err := stmt.Exec(args...); err != nil {
-		return fmt.Errorf("exec stmt: %w", err)
+		return fmt.Errorf("exec stmt: %w", internal.NewErrWithStackTrace(err))
 	}
 
 	return nil

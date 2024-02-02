@@ -38,8 +38,8 @@ create table foods_locales (
 	lang_id integer references langs(id) not null,
 	value text not null check(length(value) <= 512),
 	value_normal text not null,
-	primary key(food_id, lang_id)
-) without rowid;
+	unique(food_id, lang_id)
+); -- needs rowid for fts
 
 create table foods_details (
 	food_id integer references foods(id) not null,
@@ -51,7 +51,6 @@ create table foods_details (
 );
 
 create table foods_images (
-	id integer primary key,
 	food_id integer references foods(id) not null,
 	user_id integer references users(id),
 	source_id integer references sources(id),

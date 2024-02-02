@@ -21,25 +21,28 @@ var (
 	IsProd    = false
 )
 
-func Entrypoint(run func(context.Context) error) {
-	flag.Parse()
-
+func init() {
 	time.Local = time.UTC
-	IsProd = !strings.Contains(os.Args[0], "go-build")
-
-	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
+	IsProd = !strings.Contains(os.Args[0], "go-build") && !strings.HasPrefix(os.Args[0], "/tmp/")
 
 	if IsProd {
 		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
 	} else {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-		lvl, err := zerolog.ParseLevel(*argLogLVL)
-		if err != nil {
-			log.Err(err).Msg("parse zerolog lvl")
-			os.Exit(1)
-		}
-		zerolog.SetGlobalLevel(lvl)
 	}
+}
+
+func Entrypoint(run func(context.Context) error) {
+	flag.Parse()
+
+	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
+
+	lvl, err := zerolog.ParseLevel(*argLogLVL)
+	if err != nil {
+		log.Err(err).Msg("parse zerolog lvl")
+		os.Exit(1)
+	}
+	zerolog.SetGlobalLevel(lvl)
 
 	log.Print("🚀 starting")
 	defer log.Print("👋 bye")

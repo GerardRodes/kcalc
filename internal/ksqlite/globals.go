@@ -33,8 +33,8 @@ func RConn() (*Conn, func()) {
 	return rconns[i], rls[i].Unlock
 }
 
-func InitGlobals(name string, readConns int) error {
-	if err := InitWrite(name); err != nil {
+func InitGlobals(name string, readConns int, create bool) error {
+	if err := InitWrite(name, create); err != nil {
 		return fmt.Errorf("init write: %w", err)
 	}
 	log.Debug().Msg("init sqlite write conn")
@@ -68,8 +68,12 @@ func CloseGlobals() error {
 	return nil
 }
 
-func InitWrite(name string) error {
-	conn, err := Open(name, SQLITE_OPEN_READWRITE|SQLITE_OPEN_CREATE)
+func InitWrite(name string, create bool) error {
+	flags := SQLITE_OPEN_READWRITE
+	if create {
+		flags = flags | SQLITE_OPEN_CREATE
+	}
+	conn, err := Open(name, flags)
 	if err != nil {
 		return fmt.Errorf("open write conn: %w", err)
 	}

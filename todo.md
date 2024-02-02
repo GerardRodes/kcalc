@@ -17,3 +17,4 @@
       - CREATE VIRTUAL TABLE fts USING fts5(value, content=foods_locales, content_rowid=d);
       - https://www.sqlite.org/fts5.html#:~:text=up%20to%20date.-,CREATE,-TRIGGER%20tbl_ai%20AFTER
     - select * from vt where l match 'pollo' order by rank limit 10;
+- el huevo, como definir alimentos que van por unidad (gram_por_unidad?)

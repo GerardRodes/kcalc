@@ -11,17 +11,17 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"sync"
+	"sync/atomic"
 
 	"github.com/GerardRodes/kcalc/internal"
+	"github.com/jxskiss/base62"
 	"github.com/kolesa-team/go-webp/encoder"
 	"github.com/kolesa-team/go-webp/webp"
-	"github.com/segmentio/ksuid"
 )
 
 var (
-	prevL sync.Mutex
-	prev  = ksuid.New()
+	lastID atomic.Uint64
+	b62enc = base62.NewEncoding("l5ON9XsidVFxGJST20gEuBa4fhvkqUK1cjboDnMCALIp3zPQ8YWwy6ZemrRHt7") // random base62
 )
 
 func StoreImage(rawURL string) (foodImage internal.FoodImage, outErr error) {
@@ -77,15 +77,8 @@ func StoreImage(rawURL string) (foodImage internal.FoodImage, outErr error) {
 		return internal.FoodImage{}, fmt.Errorf("unsupported image type %q", mmt)
 	}
 
-	var id ksuid.KSUID
-	{
-		prevL.Lock()
-		id = prev.Next()
-		prev = id
-		prevL.Unlock()
-	}
-
-	output, err := os.Create(filepath.Join(internal.RootDir, "images", id.String()+".webp"))
+	id := string(b62enc.FormatUint(lastID.Add(1)))
+	output, err := os.Create(filepath.Join(internal.RootDir, "images", id+".webp"))
 	if err != nil {
 		return internal.FoodImage{}, fmt.Errorf("create webp: %w", err)
 	}
@@ -101,7 +94,7 @@ func StoreImage(rawURL string) (foodImage internal.FoodImage, outErr error) {
 	}
 
 	return internal.FoodImage{
-		URI:    filepath.Join("images", id.String()+".webp"),
+		URI:    filepath.Join("images", id+".webp"),
 		Width:  int64(imgConfig.Width),
 		Height: int64(imgConfig.Height),
 	}, nil

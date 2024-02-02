@@ -5,9 +5,10 @@ go 1.21.0
 require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/eatonphil/gosqlite v0.9.0
+	github.com/julienschmidt/httprouter v1.3.0
+	github.com/jxskiss/base62 v1.1.0
 	github.com/kolesa-team/go-webp v1.0.4
 	github.com/rs/zerolog v1.31.0
-	github.com/segmentio/ksuid v1.0.4
 	go.uber.org/automaxprocs v1.5.3
 	golang.org/x/sync v0.6.0
 	golang.org/x/text v0.14.0

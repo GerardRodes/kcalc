@@ -20,7 +20,7 @@ import (
 )
 
 type sourceFoodPhoto struct {
-	Thumb   string `json:"thumb"`
+	// Thumb   string `json:"thumb"` is equal to highres
 	Highres string `json:"highres"`
 }
 type sourceFood struct {
@@ -121,8 +121,8 @@ func Ingest(ctx context.Context, jsonsDir string) error {
 					}
 
 					food := internal.Food{
-						DetailsFromSources: map[int64][]internal.FoodDetail{
-							sourceID: {foodDetail},
+						DetailsFromSources: map[int64]internal.FoodDetail{
+							sourceID: foodDetail,
 						},
 						ImagesFromSources: map[int64][]internal.FoodImage{},
 						Locales: map[int64]internal.Locale{
@@ -133,7 +133,7 @@ func Ingest(ctx context.Context, jsonsDir string) error {
 						},
 					}
 
-					for _, v := range []string{srcFood.Photo.Highres, srcFood.Photo.Thumb} {
+					for _, v := range []string{srcFood.Photo.Highres /*srcFood.Photo.Thumb they are the same*/} {
 						if v == "" {
 							continue
 						}

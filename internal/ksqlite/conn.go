@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/GerardRodes/kcalc/internal"
 	"github.com/eatonphil/gosqlite"
 )
 
@@ -42,18 +43,18 @@ func (c *Conn) Prepare(sql string, args ...interface{}) (stmt *gosqlite.Stmt, ou
 			}
 
 			if err := stmt.Close(); err != nil {
-				outErr = errors.Join(outErr, fmt.Errorf("close stmt after bad bind: %w", err))
+				outErr = errors.Join(outErr, fmt.Errorf("close stmt after bad bind: %w", internal.NewErrWithStackTrace(err)))
 			}
 			return
 		}
 
 		if err := stmt.Reset(); err != nil {
-			outErr = fmt.Errorf("reset stmt: %w", err)
+			outErr = fmt.Errorf("reset stmt: %w", internal.NewErrWithStackTrace(err))
 			return
 		}
 
 		if err := stmt.Bind(args...); err != nil {
-			outErr = fmt.Errorf("bind args to stmt: %w", err)
+			outErr = fmt.Errorf("bind args to stmt: %w", internal.NewErrWithStackTrace(err))
 			return
 		}
 	}()
@@ -64,7 +65,7 @@ func (c *Conn) Prepare(sql string, args ...interface{}) (stmt *gosqlite.Stmt, ou
 
 	stmt, err := c.conn.Prepare(sql, args...)
 	if err != nil {
-		return nil, fmt.Errorf("prepare stmt: %w", err)
+		return nil, fmt.Errorf("prepare stmt: %w", internal.NewErrWithStackTrace(err))
 	}
 
 	c.stmts[sql] = stmt
