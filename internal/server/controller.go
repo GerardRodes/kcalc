@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
+	servertiming "github.com/mitchellh/go-server-timing"
 	"github.com/rs/zerolog/log"
 )
 
@@ -16,11 +17,18 @@ func NewHandler(c Controller) httprouter.Handle {
 		// todo: handle panic
 		log.Debug().Str("method", r.Method).Str("path", r.URL.Path).Msg("request")
 
-		http.TimeoutHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx, cancel := context.WithTimeout(r.Context(), time.Second*8)
+		h := http.TimeoutHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			timing := servertiming.FromContext(r.Context())
+			defer timing.NewMetric("handler").Start().Stop()
+
+			ctx, cancel := context.WithTimeout(r.Context(), time.Second*8) // custom ctx timeout, lower than timeout handler
 			defer cancel()
 			r = r.WithContext(ctx)
+
 			errorHandler(w, c(w, r, p))
-		}), time.Second*9, "http handler request timeout").ServeHTTP(w, r)
+		}), time.Second*9, "http handler request timeout")
+		h = servertiming.Middleware(h, nil)
+
+		h.ServeHTTP(w, r)
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"sync"
 
+	"github.com/GerardRodes/kcalc/internal"
 	"github.com/rs/zerolog/log"
 )
 
@@ -48,6 +49,17 @@ func InitGlobals(name string, readConns int, create bool) error {
 		return fmt.Errorf("init reads: %w", err)
 	}
 	log.Debug().Msgf("init %d sqlite read conns", readConns)
+
+	var err error
+	internal.LangByID, err = ListLangsByID()
+	if err != nil {
+		return fmt.Errorf("init langs: %w", err)
+	}
+
+	internal.SourceByID, err = ListSourcesByID()
+	if err != nil {
+		return fmt.Errorf("init sources: %w", err)
+	}
 
 	return nil
 }
@@ -95,6 +107,22 @@ func InitReads(name string, readConns int) error {
 
 		rls[i] = &sync.Mutex{}
 		rconns[i] = NewConn(conn)
+	}
+
+	return nil
+}
+
+func Optimize() error {
+	log.Debug().Msg("optimizing db")
+	w, unlock := WConn()
+	defer unlock()
+
+	err := w.conn.Exec(`
+		PRAGMA analysis_limit=0;
+		PRAGMA optimize;
+	`)
+	if err != nil {
+		return fmt.Errorf("optimize db: %w", err)
 	}
 
 	return nil

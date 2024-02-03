@@ -12,64 +12,16 @@
 	</style>
 </head>
 <body>
-
-	<form>
+	<form
+		method="get"
+		action="/cpanel"
+		up-autosubmit
+		up-watch-delay="150"
+		up-focus="keep"
+		up-target="#foods-table">
 		<input type="search" name="search" />
 	</form>
-	<table>
-		<caption>
-			Foods
-		</caption>
-		<thead>
-			<tr>
-				<th>Food ID</th>
-				<th>Locales</th>
-				<th>Details</th>
-				<th>Images</th>
-			</tr>
-		</thead>
-		<tbody>
-			{{ range .foods }}
-			<tr>
-				<th>{{ .ID }}</th>
-				<td> {{/* LOCALES */}}
-					<table>
-						{{ range $langID, $locale := .Locales }}
-						<tr>
-							<th>{{ $langID }}</th>
-							<td>{{ $locale.Value }}</td>
-						</tr>
-						{{ end }}
-					</table>
-				</td>
-				<td> {{/* DETAILS */}}
-					<table>
-						{{ range $sourceID, $detail := .DetailsFromSources }}
-						<tr>
-							<th>{{ $sourceID }}</th>
-							<td>{{ printf "%.2f" $detail.KCal }}</td>
-						</tr>
-						{{ end }}
-					</table>
-				</td>
-				<td> {{/* IMAGES */}}
-					<table>
-						{{ range $sourceID, $imgs := .ImagesFromSources }}
-						<tr>
-							<th>{{ $sourceID }}</th>
-							<td>
-								{{ range $imgs }}
-								<img src="/assets/{{ .URI }}"  decoding="async" loading="lazy" />
-								{{ end }}
-							</td>
-						</tr>
-						{{ end }}
-					</table>
-				</td>
-			</tr>
-			{{ end }}
-		</tbody>
-	</table>
+	{{ template "foods_table" . }}
 </body>
 </html>
 {{ end }}

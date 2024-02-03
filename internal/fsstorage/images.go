@@ -50,7 +50,7 @@ func StoreImage(rawURL string) (foodImage internal.FoodImage, outErr error) {
 	}
 
 	var img image.Image
-	var imgConfig image.Config
+	// var imgConfig image.Config
 	switch mmt := mime.TypeByExtension(filepath.Ext(rawURL)); mmt {
 	case "image/jpeg":
 		img, err = jpeg.Decode(bytes.NewBuffer(imgData))
@@ -58,20 +58,20 @@ func StoreImage(rawURL string) (foodImage internal.FoodImage, outErr error) {
 			return internal.FoodImage{}, fmt.Errorf("decode jpeg: %w", err)
 		}
 
-		imgConfig, err = jpeg.DecodeConfig(bytes.NewBuffer(imgData))
-		if err != nil {
-			return internal.FoodImage{}, fmt.Errorf("decode jpeg config: %w", err)
-		}
+		// imgConfig, err = jpeg.DecodeConfig(bytes.NewBuffer(imgData))
+		// if err != nil {
+		// 	return internal.FoodImage{}, fmt.Errorf("decode jpeg config: %w", err)
+		// }
 	case "image/png":
 		img, err = png.Decode(bytes.NewBuffer(imgData))
 		if err != nil {
 			return internal.FoodImage{}, fmt.Errorf("decode png: %w", err)
 		}
 
-		imgConfig, err = png.DecodeConfig(bytes.NewBuffer(imgData))
-		if err != nil {
-			return internal.FoodImage{}, fmt.Errorf("decode png config: %w", err)
-		}
+		// imgConfig, err = png.DecodeConfig(bytes.NewBuffer(imgData))
+		// if err != nil {
+		// 	return internal.FoodImage{}, fmt.Errorf("decode png config: %w", err)
+		// }
 	default:
 		// todo:
 		return internal.FoodImage{}, fmt.Errorf("unsupported image type %q", mmt)
@@ -94,8 +94,7 @@ func StoreImage(rawURL string) (foodImage internal.FoodImage, outErr error) {
 	}
 
 	return internal.FoodImage{
-		URI:    filepath.Join("images", id+".webp"),
-		Width:  int64(imgConfig.Width),
-		Height: int64(imgConfig.Height),
+		URI: filepath.Join("images", id+".webp"),
+		// Kind: "TODO",
 	}, nil
 }

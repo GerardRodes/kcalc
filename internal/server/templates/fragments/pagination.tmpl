@@ -1,0 +1,26 @@
+{{define "pagination"}}
+{{ if index . "nextPageID" }}
+{{ if lt .prevPageID 0 }}
+<span class="disabled">prev</span>
+{{else}}
+<a
+	up-follow
+	up-instant
+	up-preload
+	up-target="#foods-table"
+	href="?last_id={{ .prevPageID }}"
+>
+	prev
+</a>
+{{end}}
+<a
+	up-follow
+	up-instant
+	up-preload
+	up-target="#foods-table"
+	href="?last_id={{ .nextPageID }}"
+>
+	next
+</a>
+{{end}}
+{{end}}

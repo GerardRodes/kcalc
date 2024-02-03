@@ -31,6 +31,10 @@ func run(ctx context.Context) (outErr error) {
 		return fmt.Errorf("ksqlite init globals: %w", err)
 	}
 	defer func() {
+		if err := ksqlite.Optimize(); err != nil {
+			outErr = errors.Join(outErr, fmt.Errorf("optimize: %w", err))
+		}
+
 		if err := ksqlite.CloseGlobals(); err != nil {
 			outErr = errors.Join(outErr, fmt.Errorf("ksqlite close globals: %w", err))
 		}

@@ -4,7 +4,7 @@ CREATE VIRTUAL TABLE fts_foods_locales USING fts5(
 	lang_id,
 	value,
 	content=foods_locales,
-	content_rowid=rowid,
+	content_rowid=rowid
 );
 CREATE TRIGGER foods_locales_ai AFTER INSERT ON foods_locales BEGIN
   INSERT INTO fts_foods_locales(rowid, food_id, lang_id, value)

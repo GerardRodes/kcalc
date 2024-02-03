@@ -54,8 +54,7 @@ create table foods_images (
 	food_id integer references foods(id) not null,
 	user_id integer references users(id),
 	source_id integer references sources(id),
-	width integer not null,
-	height integer not null,
+	kind text,
 	uri text not null unique
 );
 

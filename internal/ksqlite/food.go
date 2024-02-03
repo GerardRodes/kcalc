@@ -8,7 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func ListFoods(lastID int64) ([]internal.Food, error) {
+func ListFoods(lastID int64) ([]internal.Food, int64, error) {
 	ids, err := RQuery[int64](`
 		select id
 		from foods
@@ -17,16 +17,21 @@ func ListFoods(lastID int64) ([]internal.Food, error) {
 		limit ?
 	`, lastID, internal.PageSize)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	foods := make([]internal.Food, len(ids))
 	for i, id := range ids {
 		if err := LoadFood(id, &foods[i]); err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 	}
-	return foods, nil
+
+	total, err := RQueryOne[int64]("select count(1) from foods")
+	if err != nil {
+		return nil, 0, err
+	}
+	return foods, total, nil
 }
 
 func FindFoods(search string) ([]internal.Food, error) {
@@ -36,7 +41,7 @@ func FindFoods(search string) ([]internal.Food, error) {
 		where fts_fl.value match ?
 		order by rank
 		limit ?
-	`, search, internal.PageSize)
+	`, search+"*", internal.PageSize*10)
 	if err != nil {
 		return nil, err
 	}
@@ -116,11 +121,11 @@ func AddFood(food internal.Food) error {
 		for _, img := range imgs {
 			err := Exec(`
 				insert into foods_images
-				(food_id, source_id, height, width, uri)
-				values (?, ?, ?, ?, ?);
-			`, foodID, sourceID, img.Height, img.Width, img.URI)
+				(food_id, source_id, kind, uri)
+				values (?, ?, ?, ?);
+			`, foodID, sourceID, img.Kind, img.URI)
 			if err != nil {
-				spew.Dump(foodID, sourceID, img.Height, img.Width, img.URI)
+				spew.Dump(foodID, sourceID, img)
 				return fmt.Errorf("food(%d) source(%d) add food image: %w", foodID, sourceID, err)
 			}
 		}
@@ -176,16 +181,19 @@ func LoadFood(foodID int64, food *internal.Food) error {
 
 	{ // locales
 		type rowt struct {
-			LangID int64
-			Value  string
+			LangID        int64
+			Value, Normal string
 		}
-		rows, err := RQuery[rowt]("select lang_id, value from foods_locales where food_id = ?", foodID)
+		rows, err := RQuery[rowt]("select lang_id, value, value_normal from foods_locales where food_id = ?", foodID)
 		if err != nil {
 			return err
 		}
 
 		for _, row := range rows {
-			food.Locales[row.LangID] = internal.Locale{Value: row.Value}
+			food.Locales[row.LangID] = internal.Locale{
+				Value:  row.Value,
+				Normal: row.Normal,
+			}
 		}
 	}
 

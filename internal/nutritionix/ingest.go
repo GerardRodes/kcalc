@@ -9,12 +9,14 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync/atomic"
 
 	"github.com/GerardRodes/kcalc/internal"
 	"github.com/GerardRodes/kcalc/internal/fsstorage"
 	"github.com/GerardRodes/kcalc/internal/ksqlite"
+	"github.com/gertd/go-pluralize"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
 )
@@ -48,7 +50,9 @@ func Ingest(ctx context.Context, jsonsDir string) error {
 	}
 
 	filesGroup, ctx := errgroup.WithContext(ctx)
-	filesGroup.SetLimit(10)
+	filesGroup.SetLimit(runtime.NumCPU() - 1)
+
+	pluralizeC := pluralize.NewClient()
 
 	var done atomic.Int32
 	for _, c := range children {
@@ -64,6 +68,7 @@ func Ingest(ctx context.Context, jsonsDir string) error {
 		}
 
 		lgr := log.With().
+			Str("source", "nutritionix").
 			Str("name", c.Name()).
 			Logger()
 
@@ -104,7 +109,7 @@ func Ingest(ctx context.Context, jsonsDir string) error {
 			}
 
 			foodGroup, ctx := errgroup.WithContext(ctx)
-			foodGroup.SetLimit(10)
+			foodGroup.SetLimit(1)
 
 			for _, srcFood := range data.Foods {
 				if err := ctx.Err(); err != nil {
@@ -120,6 +125,7 @@ func Ingest(ctx context.Context, jsonsDir string) error {
 						foodDetail.KCal = float64(srcFood.Calories) / float64(srcFood.ServingWeightGrams)
 					}
 
+					name := pluralizeC.Singular(srcFood.Name)
 					food := internal.Food{
 						DetailsFromSources: map[int64]internal.FoodDetail{
 							sourceID: foodDetail,
@@ -127,8 +133,8 @@ func Ingest(ctx context.Context, jsonsDir string) error {
 						ImagesFromSources: map[int64][]internal.FoodImage{},
 						Locales: map[int64]internal.Locale{
 							langID: {
-								Value:  srcFood.Name,
-								Normal: internal.MustNormalizeStr(srcFood.Name),
+								Value:  name,
+								Normal: internal.MustNormalizeStr(name),
 							},
 						},
 					}

@@ -4,6 +4,7 @@ import (
 	"embed"
 	"html/template"
 	"path/filepath"
+	"reflect"
 
 	"github.com/GerardRodes/kcalc/internal"
 	"github.com/rs/zerolog/log"
@@ -12,7 +13,23 @@ import (
 //go:embed templates/*/*.tmpl
 var gohtml embed.FS
 
-var tmpl = template.New("")
+func refVal(v any) reflect.Value {
+	if val, ok := v.(reflect.Value); ok {
+		return val
+	}
+
+	return reflect.ValueOf(v)
+}
+
+var tmpl = template.New("").Funcs(template.FuncMap{
+	"last": func(v any) any {
+		val := refVal(v)
+		return val.Index(val.Len() - 1)
+	},
+	"field": func(f string, v any) any {
+		return refVal(v).FieldByName(f)
+	},
+})
 
 func init() {
 	tmpl = template.Must(tmpl.ParseFS(gohtml, "templates/fragments/*.tmpl"))

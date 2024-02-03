@@ -13,9 +13,7 @@ type (
 		KCal float64
 	}
 	FoodImage struct {
-		Type   string
-		Width  int64
-		Height int64
-		URI    string
+		Kind string
+		URI  string
 	}
 )

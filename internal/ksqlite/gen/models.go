@@ -25,13 +25,10 @@ type FoodsDetail struct {
 }
 
 type FoodsImage struct {
-	ID       int64
 	FoodID   int64
 	UserID   sql.NullInt64
 	SourceID sql.NullInt64
-	Type     string
-	Width    int64
-	Height   int64
+	Kind     sql.NullString
 	Uri      string
 }
 
@@ -40,6 +37,12 @@ type FoodsLocale struct {
 	LangID      int64
 	Value       string
 	ValueNormal string
+}
+
+type FtsFoodsLocale struct {
+	FoodID string
+	LangID string
+	Value  string
 }
 
 type Lang struct {

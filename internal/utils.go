@@ -8,3 +8,7 @@ func Must[T any](v T, err error) T {
 	}
 	return v
 }
+
+func KJ2KCal(kJ float64) float64 {
+	return kJ * 0.2390057361377
+}

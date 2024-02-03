@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -76,6 +77,11 @@ func entrypoint(
 			}
 		} else if outErr != nil {
 			log.Err(outErr).Msg("entrypoint")
+
+			var errst ErrWithStackTrace
+			if errors.As(outErr, &errst) {
+				os.Stderr.Write(errst.Stack)
+			}
 		}
 	}()
 

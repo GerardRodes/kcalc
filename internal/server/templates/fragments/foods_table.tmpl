@@ -1,0 +1,63 @@
+{{define "foods_table"}}
+<div id="foods-table" up-main>
+	<div>
+		{{ .total }} food{{if gt .total 1 }}s{{end}}
+	</div>
+	{{ template "pagination" . }}
+	<table>
+		<caption>
+			Foods
+		</caption>
+		<thead>
+			<tr>
+				<th>Food ID</th>
+				<th>Locales</th>
+				<th>Details</th>
+				<th>Images</th>
+			</tr>
+		</thead>
+		<tbody>
+			{{ range .foods }}
+			<tr>
+				<th>{{ .ID }}</th>
+				<td> {{/* LOCALES */}}
+					<table>
+						{{ range $langID, $locale := .Locales }}
+						<tr>
+							<th>{{ index $.langByID $langID }}</th>
+							<td title="{{$locale.Normal}}">{{ $locale.Value }}</td>
+						</tr>
+						{{ end }}
+					</table>
+				</td>
+				<td> {{/* DETAILS */}}
+					<table>
+						{{ range $sourceID, $detail := .DetailsFromSources }}
+						<tr>
+							<th style="font-size: 0.75em;">{{ index $.sourceByID $sourceID }}</th>
+							<td>{{ printf "%.2f" $detail.KCal }}</td>
+						</tr>
+						{{ end }}
+					</table>
+				</td>
+				<td> {{/* IMAGES */}}
+					<table>
+						{{ range $sourceID, $imgs := .ImagesFromSources }}
+						<tr>
+							<th style="font-size: 0.75em;">{{ index $.sourceByID $sourceID }}</th>
+							<td>
+								{{ range $imgs }}
+								<img src="/assets/{{ .URI }}"  decoding="async" loading="lazy" />
+								{{ end }}
+							</td>
+						</tr>
+						{{ end }}
+					</table>
+				</td>
+			</tr>
+			{{ end }}
+		</tbody>
+	</table>
+	{{ template "pagination" . }}
+</div>
+{{end}}

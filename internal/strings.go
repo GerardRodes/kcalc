@@ -30,12 +30,14 @@ func NormalizeStr(v string) (string, error) {
 	}
 	defer chains.Put(chain)
 
-	result, _, err := transform.String(chain, v)
+	v, _, err := transform.String(chain, v)
 	if !ok {
 		return "", fmt.Errorf("normalize string %w", err)
 	}
 
-	return strings.ToLower(result), nil
+	v = strings.ToLower(v)
+
+	return v, nil
 }
 
 func MustNormalizeStr(v string) string {
