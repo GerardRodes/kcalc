@@ -2,12 +2,12 @@ package internal
 
 type (
 	Food struct {
-		ID                 int64
-		DetailsFromSources map[ /*source_id*/ int64]FoodDetail
-		DetailsFromUsers   map[ /*user_id*/ int64]FoodDetail
-		ImagesFromSources  map[ /*source_id*/ int64][]FoodImage
-		ImagesFromUsers    map[ /*user_id*/ int64][]FoodImage
-		Locales            map[ /*lang_id*/ int64]Locale
+		ID             int64
+		DetailBySource map[ /*source_id*/ int64]FoodDetail
+		DetailByUser   map[ /*user_id*/ int64]FoodDetail
+		ImageBySource  map[ /*source_id*/ int64]FoodImage
+		ImageByUser    map[ /*user_id*/ int64]FoodImage
+		Locales        map[ /*lang_id*/ int64]Locale
 	}
 	FoodDetail struct {
 		KCal float64

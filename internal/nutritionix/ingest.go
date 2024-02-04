@@ -127,10 +127,10 @@ func Ingest(ctx context.Context, jsonsDir string) error {
 
 					name := pluralizeC.Singular(srcFood.Name)
 					food := internal.Food{
-						DetailsFromSources: map[int64]internal.FoodDetail{
+						DetailBySource: map[int64]internal.FoodDetail{
 							sourceID: foodDetail,
 						},
-						ImagesFromSources: map[int64][]internal.FoodImage{},
+						ImageBySource: map[int64]internal.FoodImage{},
 						Locales: map[int64]internal.Locale{
 							langID: {
 								Value:  name,
@@ -144,12 +144,12 @@ func Ingest(ctx context.Context, jsonsDir string) error {
 							continue
 						}
 
-						foodImage, err := fsstorage.StoreImage(v)
+						foodImage, err := fsstorage.DownloadAndStoreImage(v)
 						if err != nil {
 							lgr.Err(err).Str("url", v).Msg("download image")
 							continue
 						}
-						food.ImagesFromSources[sourceID] = append(food.ImagesFromSources[sourceID], foodImage)
+						food.ImageBySource[sourceID] = foodImage
 					}
 
 					if err := ksqlite.AddFood(food); err != nil {

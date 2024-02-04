@@ -18,8 +18,9 @@ import (
 )
 
 var (
-	argLogLVL = flag.String("log-lvl", "debug", "")
-	IsProd    = false
+	argRootDir = flag.String("root-dir", "", "")
+	argLogLVL  = flag.String("log-lvl", "debug", "")
+	IsProd     = false
 )
 
 func init() {
@@ -36,6 +37,8 @@ func init() {
 func Entrypoint(run func(context.Context) error) {
 	flag.Parse()
 
+	RootDir = *argRootDir
+
 	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
 
 	lvl, err := zerolog.ParseLevel(*argLogLVL)
@@ -47,6 +50,8 @@ func Entrypoint(run func(context.Context) error) {
 
 	log.Print("🚀 starting")
 	defer log.Print("👋 bye")
+
+	defer func() { log.Debug().Str("root_dir", RootDir).Msg("run end") }()
 
 	if err := entrypoint(ctx, run); err != nil {
 		os.Exit(1)

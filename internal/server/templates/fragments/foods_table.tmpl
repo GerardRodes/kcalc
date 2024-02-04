@@ -1,7 +1,7 @@
 {{- define "foods_table" -}}
 <div id="foods-table" up-main>
 	<div>
-		{{ .total }} food{{if gt .total 1 }}s{{end}}
+		{{ .total }} alimento{{if gt .total 1 }}s{{end}}
 	</div>
 	{{ template "pagination" . }}
 	<table>
@@ -32,7 +32,7 @@
 				</td>
 				<td> {{/* DETAILS */}}
 					<table>
-						{{ range $sourceID, $detail := .DetailsFromSources }}
+						{{ range $sourceID, $detail := .DetailBySource }}
 						<tr>
 							<th style="font-size: 0.75em;">{{ index $.sourceByID $sourceID }}</th>
 							<td>{{ printf "%.2f" $detail.KCal }}</td>
@@ -42,13 +42,11 @@
 				</td>
 				<td> {{/* IMAGES */}}
 					<table>
-						{{ range $sourceID, $imgs := .ImagesFromSources }}
+						{{ range $sourceID, $img := .ImageBySource }}
 						<tr>
 							<th style="font-size: 0.75em;">{{ index $.sourceByID $sourceID }}</th>
 							<td>
-								{{ range $imgs }}
-								<img src="/assets/{{ .URI }}"  decoding="async" loading="lazy" />
-								{{ end }}
+								<img src="/assets/{{ $img.URI }}"  decoding="async" loading="lazy" />
 							</td>
 						</tr>
 						{{ end }}

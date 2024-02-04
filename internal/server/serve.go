@@ -26,7 +26,8 @@ func Serve(ctx context.Context) error {
 	router := httprouter.New()
 	router.ServeFiles("/assets/*filepath", http.Dir(internal.RootDir))
 	router.GET("/cpanel", NewHandler(CPanelGET))
-	router.GET("/foods/new", NewHandler(FoodsNew))
+	router.GET("/foods/new", NewHandler(FoodsForm))
+	router.POST("/foods", NewHandler(FoodsNew))
 
 	// todo:
 	// router.PanicHandler

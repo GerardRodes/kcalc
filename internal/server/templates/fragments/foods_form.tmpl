@@ -1,0 +1,28 @@
+{{- define "foods_form" -}}
+<form
+	method="post"
+	action="/foods"
+	enctype="multipart/form-data"
+	up-submit
+>
+	<!-- TODO: locale por defecto current locale -->
+	<label for="locale-es">Nombre</label>
+	<input type="text" id="locale-es" name="locale-es" required>
+
+	<br>
+
+	<input style="width: 3em;" type="number" required min="0" id="kcal" name="kcal">
+	kcal por cada
+	<input style="width: 3em;" type="number" required min="0" value="100" id="g" name="g">
+	gramos
+
+	<br>
+
+	<label for="photo">Foto</label>
+	<input type="file" id="photo" name="photo" accept="image/png, image/jpeg">
+
+	<br>
+
+  <button type="submit">OK</button>
+</form>
+{{- end -}}

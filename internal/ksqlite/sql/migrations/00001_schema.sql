@@ -9,12 +9,14 @@ create table users (
 	email text check(length(email) <= 255) not null,
 	pass_hash blob check(length(pass_hash) <= 255) not null,
 	verified_email boolean not null default 'false',
-	lang integer references langs(id) not null
+	lang integer references langs(id) not null,
+	created_at integer not null
 );
 
 create table families (
 	id integer primary key,
-	name text check(length(name) <= 255) not null
+	name text check(length(name) <= 255) not null,
+	created_at integer not null
 );
 
 create table rel_families_users (
@@ -30,7 +32,8 @@ create table sources (
 
 -- name is at locales
 create table foods (
-	id integer primary key
+	id integer primary key,
+	created_at integer not null
 );
 
 create table foods_locales (
@@ -58,3 +61,7 @@ create table foods_images (
 	uri text not null unique
 );
 
+create table kv (
+	k text not null unique,
+	v blob not null
+);

@@ -29,6 +29,9 @@ var tmpl = template.New("").Funcs(template.FuncMap{
 	"field": func(f string, v any) any {
 		return refVal(v).FieldByName(f)
 	},
+	"last_iter": func(v any, i int64) bool {
+		return refVal(v).Len() == int(i+1)
+	},
 })
 
 func init() {
@@ -38,5 +41,12 @@ func init() {
 		name := f.Name()[:len(f.Name())-len(filepath.Ext(f.Name()))]
 		tmpl = template.Must(tmpl.New(name).ParseFS(gohtml, filepath.Join("templates/views", f.Name())))
 		log.Debug().Str("name", name).Msg("parsed template")
+	}
+}
+
+func newData() map[any]any {
+	return map[any]any{
+		"langByID":   internal.LangByID,
+		"sourceByID": internal.SourceByID,
 	}
 }

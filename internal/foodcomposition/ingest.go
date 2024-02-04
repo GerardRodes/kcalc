@@ -66,7 +66,7 @@ func Ingest(ctx context.Context, csvPath string) (outErr error) {
 		}
 
 		err = ksqlite.AddFood(internal.Food{
-			DetailsFromSources: map[int64]internal.FoodDetail{
+			DetailBySource: map[int64]internal.FoodDetail{
 				sourceID: {
 					KCal: internal.KJ2KCal(kJ) / 100,
 				},

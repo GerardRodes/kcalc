@@ -21,12 +21,12 @@
 		up-target="#foods-table">
 		<input type="search" name="search" />
 	</form>
-	<a
-		href="/foods/new"
+	<button
+		up-href="/foods/new"
 		up-layer="new"
 		up-mode="modal"
 		up-target="form"
-	>new food</a>
+	>+ alimento</button>
 	{{ template "foods_table" . }}
 </body>
 </html>

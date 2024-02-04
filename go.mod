@@ -10,6 +10,7 @@ require (
 	github.com/jxskiss/base62 v1.1.0
 	github.com/kolesa-team/go-webp v1.0.4
 	github.com/mitchellh/go-server-timing v1.0.1
+	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/rs/zerolog v1.31.0
 	go.uber.org/automaxprocs v1.5.3
 	golang.org/x/sync v0.6.0

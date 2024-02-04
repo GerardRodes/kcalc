@@ -2,6 +2,7 @@ package ksqlite
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/GerardRodes/kcalc/internal"
 	"github.com/davecgh/go-spew/spew"
@@ -105,29 +106,30 @@ func AddFood(food internal.Food) error {
 		foodID = collisionFoodIDs[0]
 	} else {
 		var err error
-		foodID, err = WQueryOne[int64]("insert into foods default values returning id;")
+		foodID, err = WQueryOne[int64](
+			"insert into foods (created_at) values (?) returning id;",
+			time.Now().UnixNano(),
+		)
 		if err != nil {
 			return fmt.Errorf("insert food: %w", err)
 		}
 	}
 
-	for sourceID, detail := range food.DetailsFromSources {
+	for sourceID, detail := range food.DetailBySource {
 		if err := AddFoodDetailFromSource(foodID, sourceID, detail); err != nil {
 			return fmt.Errorf("food(%d) source(%d) add food detail: %w", foodID, sourceID, err)
 		}
 	}
 
-	for sourceID, imgs := range food.ImagesFromSources {
-		for _, img := range imgs {
-			err := Exec(`
+	for sourceID, img := range food.ImageBySource {
+		err := Exec(`
 				insert into foods_images
 				(food_id, source_id, kind, uri)
 				values (?, ?, ?, ?);
 			`, foodID, sourceID, img.Kind, img.URI)
-			if err != nil {
-				spew.Dump(foodID, sourceID, img)
-				return fmt.Errorf("food(%d) source(%d) add food image: %w", foodID, sourceID, err)
-			}
+		if err != nil {
+			spew.Dump(foodID, sourceID, img)
+			return fmt.Errorf("food(%d) source(%d) add food image: %w", foodID, sourceID, err)
 		}
 	}
 
@@ -163,17 +165,17 @@ func AddFoodLocale(foodID, langID int64, locale internal.Locale) error {
 
 func LoadFood(foodID int64, food *internal.Food) error {
 	food.ID = foodID
-	if food.DetailsFromSources == nil {
-		food.DetailsFromSources = map[int64]internal.FoodDetail{}
+	if food.DetailBySource == nil {
+		food.DetailBySource = map[int64]internal.FoodDetail{}
 	}
-	if food.DetailsFromUsers == nil {
-		food.DetailsFromUsers = map[int64]internal.FoodDetail{}
+	if food.DetailByUser == nil {
+		food.DetailByUser = map[int64]internal.FoodDetail{}
 	}
-	if food.ImagesFromSources == nil {
-		food.ImagesFromSources = map[int64][]internal.FoodImage{}
+	if food.ImageBySource == nil {
+		food.ImageBySource = map[int64]internal.FoodImage{}
 	}
-	if food.ImagesFromUsers == nil {
-		food.ImagesFromUsers = map[int64][]internal.FoodImage{}
+	if food.ImageByUser == nil {
+		food.ImageByUser = map[int64]internal.FoodImage{}
 	}
 	if food.Locales == nil {
 		food.Locales = map[int64]internal.Locale{}
@@ -210,9 +212,9 @@ func LoadFood(foodID int64, food *internal.Food) error {
 		for _, row := range rows {
 			detail := internal.FoodDetail{KCal: row.KCal}
 			if row.SourceID != 0 {
-				food.DetailsFromSources[row.SourceID] = detail
+				food.DetailBySource[row.SourceID] = detail
 			} else {
-				food.DetailsFromUsers[row.UserID] = detail
+				food.DetailByUser[row.UserID] = detail
 			}
 		}
 	}
@@ -230,9 +232,9 @@ func LoadFood(foodID int64, food *internal.Food) error {
 		for _, row := range rows {
 			img := internal.FoodImage{URI: row.URI}
 			if row.SourceID != 0 {
-				food.ImagesFromSources[row.SourceID] = append(food.ImagesFromSources[row.SourceID], img)
+				food.ImageBySource[row.SourceID] = img
 			} else {
-				food.ImagesFromSources[row.UserID] = append(food.ImagesFromSources[row.UserID], img)
+				food.ImageBySource[row.UserID] = img
 			}
 		}
 	}

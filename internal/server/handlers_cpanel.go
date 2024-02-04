@@ -16,10 +16,7 @@ func CPanelGET(w http.ResponseWriter, r *http.Request, p httprouter.Params) erro
 
 	var err error
 	var foods []internal.Food
-	data := map[any]any{
-		"langByID":   internal.LangByID,
-		"sourceByID": internal.SourceByID,
-	}
+	data := newData()
 
 	queryTiming := timing.NewMetric("query").Start()
 	{

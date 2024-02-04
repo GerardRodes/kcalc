@@ -9,12 +9,14 @@ import (
 )
 
 type Family struct {
-	ID   int64
-	Name string
+	ID        int64
+	Name      string
+	CreatedAt int64
 }
 
 type Food struct {
-	ID int64
+	ID        int64
+	CreatedAt int64
 }
 
 type FoodsDetail struct {
@@ -45,6 +47,11 @@ type FtsFoodsLocale struct {
 	Value  string
 }
 
+type Kv struct {
+	K string
+	V []byte
+}
+
 type Lang struct {
 	ID   int64
 	Name string
@@ -66,4 +73,5 @@ type User struct {
 	PassHash      []byte
 	VerifiedEmail bool
 	Lang          int64
+	CreatedAt     int64
 }
