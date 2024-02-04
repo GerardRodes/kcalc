@@ -1,4 +1,4 @@
-{{define "foods_table"}}
+{{- define "foods_table" -}}
 <div id="foods-table" up-main>
 	<div>
 		{{ .total }} food{{if gt .total 1 }}s{{end}}
@@ -60,4 +60,4 @@
 	</table>
 	{{ template "pagination" . }}
 </div>
-{{end}}
+{{- end -}}

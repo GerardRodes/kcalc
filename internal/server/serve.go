@@ -26,6 +26,7 @@ func Serve(ctx context.Context) error {
 	router := httprouter.New()
 	router.ServeFiles("/assets/*filepath", http.Dir(internal.RootDir))
 	router.GET("/cpanel", NewHandler(CPanelGET))
+	router.GET("/foods/new", NewHandler(FoodsNew))
 
 	// todo:
 	// router.PanicHandler
@@ -44,10 +45,13 @@ func Serve(ctx context.Context) error {
 			WriteTimeout:      10 * time.Second,
 			Handler:           router,
 		},
-		"pprof": {
+	}
+
+	if !internal.IsProd {
+		servers["pprof"] = &http.Server{
 			Addr:    ":" + *argPProfPort,
 			Handler: http.DefaultServeMux,
-		},
+		}
 	}
 
 	var g errgroup.Group

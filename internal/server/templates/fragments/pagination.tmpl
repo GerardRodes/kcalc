@@ -1,4 +1,4 @@
-{{define "pagination"}}
+{{- define "pagination" -}}
 {{ if index . "nextPageID" }}
 {{ if lt .prevPageID 0 }}
 <span class="disabled">prev</span>
@@ -23,4 +23,4 @@
 	next
 </a>
 {{end}}
-{{end}}
+{{- end -}}

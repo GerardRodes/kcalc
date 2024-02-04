@@ -14,8 +14,7 @@ type Controller func(w http.ResponseWriter, r *http.Request, p httprouter.Params
 
 func NewHandler(c Controller) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-		// todo: handle panic
-		log.Debug().Str("method", r.Method).Str("path", r.URL.Path).Msg("request")
+		log.Debug().Str("method", r.Method).Str("uri", r.URL.RequestURI()).Msg("request")
 
 		h := http.TimeoutHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			timing := servertiming.FromContext(r.Context())

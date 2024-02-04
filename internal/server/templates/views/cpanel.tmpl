@@ -1,4 +1,4 @@
-{{ define "cpanel" }}
+{{- define "cpanel" -}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,7 +21,13 @@
 		up-target="#foods-table">
 		<input type="search" name="search" />
 	</form>
+	<a
+		href="/foods/new"
+		up-layer="new"
+		up-mode="modal"
+		up-target="form"
+	>new food</a>
 	{{ template "foods_table" . }}
 </body>
 </html>
-{{ end }}
+{{- end -}}
