@@ -30,7 +30,7 @@ var (
 )
 
 func Init() error {
-	id, err := ksqlite.KVGetUInt64(lastIDKey)
+	id, err := ksqlite.KVGet[uint64](lastIDKey)
 	if err != nil && !errors.Is(err, internal.ErrNotFound) {
 		return fmt.Errorf("KVGet: %w", err)
 	}
@@ -106,7 +106,7 @@ func StoreImage(data []byte, mimetype string) (uri string, outErr error) {
 			// try to recover some ids
 			lastID.CompareAndSwap(newID, prevID)
 		} else {
-			outErr = ksqlite.KVSetUInt64(lastIDKey, newID)
+			outErr = ksqlite.KVSet(lastIDKey, newID)
 		}
 	}()
 	name := string(b62enc.FormatUint(newID))

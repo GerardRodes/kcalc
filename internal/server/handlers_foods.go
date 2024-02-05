@@ -16,7 +16,7 @@ func FoodsForm(w http.ResponseWriter, r *http.Request, p httprouter.Params) erro
 }
 
 func FoodsNew(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	if err := r.ParseMultipartForm(5_000); err != nil {
+	if err := r.ParseMultipartForm(1024 * 4); err != nil {
 		return fmt.Errorf("parse multipart form: %w", err)
 	}
 

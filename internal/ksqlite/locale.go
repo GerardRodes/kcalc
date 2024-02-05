@@ -1,15 +1,15 @@
 package ksqlite
 
-import (
-	"github.com/GerardRodes/kcalc/internal/ksqlite/gen"
-)
-
 func GetLang(name string) (int64, error) {
 	return RQueryOne[int64]("select id from langs where name like ?", name)
 }
 
 func ListLangsByID() (map[int64]string, error) {
-	rows, err := RQuery[gen.Lang]("select * from langs")
+	type rowt struct {
+		ID   int64
+		Name string
+	}
+	rows, err := RQuery[rowt]("select id, name from langs")
 	if err != nil {
 		return nil, err
 	}

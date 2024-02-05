@@ -3,7 +3,6 @@ package ksqlite
 import (
 	_ "embed"
 	"fmt"
-	"time"
 
 	"github.com/eatonphil/gosqlite"
 )
@@ -45,9 +44,6 @@ func Open(name string, flagArgs ...int) (*gosqlite.Conn, error) {
 	if err := conn.Exec(sqlPragmas); err != nil {
 		return nil, fmt.Errorf("cannot apply pragmas: %w", err)
 	}
-
-	// It's always a good idea to set a busy timeout
-	conn.BusyTimeout(5 * time.Second)
 
 	return conn, nil
 }
