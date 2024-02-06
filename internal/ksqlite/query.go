@@ -1,6 +1,7 @@
 package ksqlite
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 
@@ -46,11 +47,16 @@ func RQuery[T any](sql string, args ...any) (rows []T, err error) {
 	return Query[T](c, sql, args...)
 }
 
-func Query[T any](c *Conn, sql string, args ...any) (rows []T, err error) {
-	stmt, err := c.Prepare(sql, args...)
-	if err != nil {
-		return nil, fmt.Errorf("prepare: %w", internal.NewErrWithStackTrace(err))
+func Query[T any](c *Conn, sql string, args ...any) (rows []T, outErr error) {
+	stmt, outErr := c.Prepare(sql, args...)
+	if outErr != nil {
+		return nil, fmt.Errorf("prepare: %w", internal.NewErrWithStackTrace(outErr))
 	}
+	defer func() {
+		if err := stmt.Reset(); err != nil {
+			outErr = errors.Join(outErr, fmt.Errorf("stmt reset: %w", err))
+		}
+	}()
 
 	var zero T
 	var fieldPtrs []any
@@ -93,18 +99,46 @@ func Query[T any](c *Conn, sql string, args ...any) (rows []T, err error) {
 	return
 }
 
-func Exec(sql string, args ...any) error {
+func WExec(sql string, args ...any) error {
 	c, unlock := WConn()
 	defer unlock()
+	return Exec(c, sql, args...)
+}
 
+func Exec(c *Conn, sql string, args ...any) (outErr error) {
 	stmt, err := c.Prepare(sql, args...)
 	if err != nil {
 		return fmt.Errorf("prepare: %w", internal.NewErrWithStackTrace(err))
 	}
+	defer func() {
+		if err := stmt.Reset(); err != nil {
+			outErr = errors.Join(outErr, fmt.Errorf("stmt reset: %w", err))
+		}
+	}()
 
 	if err := stmt.Exec(args...); err != nil {
 		return fmt.Errorf("exec stmt: %w", internal.NewErrWithStackTrace(err))
 	}
 
 	return nil
+}
+
+func TX(h func(c *Conn) error) (outErr error) {
+	c, unlock := WConn()
+	defer unlock()
+	if err := c.conn.Begin(); err != nil {
+		return fmt.Errorf("being: %w", internal.NewErrWithStackTrace(err))
+	}
+
+	defer func() {
+		if outErr != nil {
+			if err := c.conn.Rollback(); err != nil {
+				outErr = errors.Join(outErr, fmt.Errorf("rollback: %w", internal.NewErrWithStackTrace(err)))
+			}
+		} else if err := c.conn.Commit(); err != nil {
+			outErr = fmt.Errorf("commit: %w", internal.NewErrWithStackTrace(err))
+		}
+	}()
+
+	return h(c)
 }

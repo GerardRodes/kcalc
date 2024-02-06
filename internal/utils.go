@@ -1,6 +1,11 @@
 package internal
 
-import "github.com/rs/zerolog/log"
+import (
+	"fmt"
+	"time"
+
+	"github.com/rs/zerolog/log"
+)
 
 func Must[T any](v T, err error) T {
 	if err != nil {
@@ -11,4 +16,14 @@ func Must[T any](v T, err error) T {
 
 func KJ2KCal(kJ float64) float64 {
 	return kJ * 0.2390057361377
+}
+
+func Measure(h func()) {
+	start := time.Now()
+	defer func() {
+		fmt.Printf("took: %v\n", time.Since(start))
+	}()
+
+	fmt.Println("start")
+	h()
 }

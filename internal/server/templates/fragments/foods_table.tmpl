@@ -25,7 +25,7 @@
 						{{ range $langID, $locale := .Locales }}
 						<tr>
 							<th>{{ index $.langByID $langID }}</th>
-							<td title="{{$locale.Normal}}">{{ $locale.Value }}</td>
+							<td>{{ $locale.Value }}</td>
 						</tr>
 						{{ end }}
 					</table>

@@ -12,6 +12,10 @@ type ErrWithStackTrace struct {
 	Stack []byte
 }
 
+func (e ErrWithStackTrace) Unwrap() error {
+	return e.error
+}
+
 func NewErrWithStackTrace(err error) error {
 	if IsProd {
 		return err

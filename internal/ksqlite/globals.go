@@ -23,6 +23,10 @@ func WConn() (*Conn, func()) {
 }
 
 func RConn() (*Conn, func()) {
+	if len(rls) == 0 {
+		return WConn()
+	}
+
 	for i := range rls {
 		if rls[i].TryLock() {
 			return rconns[i], rls[i].Unlock
@@ -55,10 +59,16 @@ func InitGlobals(name string, readConns int, create bool) error {
 	if err != nil {
 		return fmt.Errorf("init langs: %w", err)
 	}
+	for id, name := range internal.LangByID {
+		internal.LangsID[name] = id
+	}
 
 	internal.SourceByID, err = ListSourcesByID()
 	if err != nil {
 		return fmt.Errorf("init sources: %w", err)
+	}
+	for id, name := range internal.SourceByID {
+		internal.SourcesID[name] = id
 	}
 
 	return nil

@@ -2,6 +2,7 @@ package ksqlite
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"reflect"
 
@@ -17,12 +18,12 @@ func KVSet(k string, v any) error {
 	case uint, uint8, uint16, uint32, uint64:
 		var data [8]byte
 		binary.LittleEndian.PutUint64(data[:], reflect.ValueOf(vT).Uint())
-		val = data
+		val = data[:]
 	default:
 		return fmt.Errorf("unsupported type: %T", vT)
 	}
 
-	return Exec(`
+	return WExec(`
 		insert into kv (k, v)
 		values (?, ?)
 		on conflict do update
@@ -30,7 +31,7 @@ func KVSet(k string, v any) error {
 		`, k, val)
 }
 
-func KVGet[T any](k string) (T, error) {
+func KVGet[T any](k string) (t T, outErr error) {
 	var zero T
 
 	c, unlock := RConn()
@@ -39,6 +40,11 @@ func KVGet[T any](k string) (T, error) {
 	if err != nil {
 		return zero, fmt.Errorf("prepare: %w", internal.NewErrWithStackTrace(err))
 	}
+	defer func() {
+		if err := stmt.Reset(); err != nil {
+			outErr = errors.Join(outErr, fmt.Errorf("stmt reset: %w", err))
+		}
+	}()
 
 	hasRow, err := stmt.Step()
 	if err != nil {

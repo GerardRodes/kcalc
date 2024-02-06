@@ -59,26 +59,27 @@ func FindFoods(search string) ([]internal.Food, error) {
 
 func AddFoods(foods ...internal.Food) error {
 	for _, f := range foods {
-		if err := AddFood(f); err != nil {
+		if _, err := AddFood(f); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func AddFood(food internal.Food) error {
+func AddFood(food internal.Food) (int64, error) {
 	var collisionFoodIDs []int64
 	{ // check collisions
 		for langID, locale := range food.Locales {
+			normal := internal.MustNormalizeStr(locale.Value)
 			type foodLocaleRow struct{ FoodID, LangID int64 }
 			rows, err := RQuery[foodLocaleRow](`
 				select food_id, lang_id
 				from foods_locales
-				where value_normal like ?
+				where normal like ?
 					and lang_id = ?
-			`, locale.Normal, langID)
+			`, normal, langID)
 			if err != nil {
-				return fmt.Errorf("searching locales match: %w", err)
+				return 0, fmt.Errorf("searching locales match: %w", err)
 			}
 			if len(rows) == 0 {
 				continue
@@ -88,20 +89,21 @@ func AddFood(food internal.Food) error {
 				// todo: merge
 				log.Debug().
 					Int("lang_id", int(langID)).
-					Str("value_normal", locale.Normal).
+					Str("normal", normal).
 					Msg("food collision")
-				return nil
+				return 0, nil
 			}
 		}
 	}
 
 	var foodID int64
+
 	if len(collisionFoodIDs) > 1 {
 		// todo: merge
 		log.Debug().
 			Ints64("food ids", collisionFoodIDs).
 			Msg("food collision")
-		return nil
+		return 0, nil
 	} else if len(collisionFoodIDs) == 1 {
 		foodID = collisionFoodIDs[0]
 	} else {
@@ -111,56 +113,77 @@ func AddFood(food internal.Food) error {
 			time.Now().UnixNano(),
 		)
 		if err != nil {
-			return fmt.Errorf("insert food: %w", err)
+			return 0, fmt.Errorf("insert food: %w", err)
 		}
 	}
 
-	for sourceID, detail := range food.DetailBySource {
-		if err := AddFoodDetailFromSource(foodID, sourceID, detail); err != nil {
-			return fmt.Errorf("food(%d) source(%d) add food detail: %w", foodID, sourceID, err)
+	{
+		for sourceID, detail := range food.DetailBySource {
+			err := WExec(`
+				insert into foods_details
+				(food_id, source_id, kcal)
+				values (?, ?, ?)
+				on conflict do update
+				set kcal = excluded.kcal;
+			`, foodID, sourceID, detail.KCal)
+			if err != nil {
+				return 0, fmt.Errorf("food(%d) source(%d) add food detail: %w", foodID, sourceID, err)
+			}
+		}
+		for userID, detail := range food.DetailByUser {
+			err := WExec(`
+				insert into foods_details
+				(food_id, user_id, kcal)
+				values (?, ?, ?)
+				on conflict do update
+				set kcal = excluded.kcal;
+			`, foodID, userID, detail.KCal)
+			if err != nil {
+				return 0, fmt.Errorf("food(%d) user(%d) add food detail: %w", foodID, userID, err)
+			}
 		}
 	}
 
-	for sourceID, img := range food.ImageBySource {
-		err := Exec(`
+	{
+		for sourceID, img := range food.ImageBySource {
+			err := WExec(`
 				insert into foods_images
 				(food_id, source_id, kind, uri)
 				values (?, ?, ?, ?);
 			`, foodID, sourceID, img.Kind, img.URI)
-		if err != nil {
-			spew.Dump(foodID, sourceID, img)
-			return fmt.Errorf("food(%d) source(%d) add food image: %w", foodID, sourceID, err)
+			if err != nil {
+				spew.Dump(foodID, sourceID, img)
+				return 0, fmt.Errorf("food(%d) source(%d) add food image: %w", foodID, sourceID, err)
+			}
+		}
+		for userID, img := range food.ImageByUser {
+			err := WExec(`
+				insert into foods_images
+				(food_id, user_id, kind, uri)
+				values (?, ?, ?, ?);
+			`, foodID, userID, img.Kind, img.URI)
+			if err != nil {
+				spew.Dump(foodID, userID, img)
+				return 0, fmt.Errorf("food(%d) user(%d) add food image: %w", foodID, userID, err)
+			}
 		}
 	}
 
 	for langID, locale := range food.Locales {
-		if err := AddFoodLocale(foodID, langID, locale); err != nil {
-			return fmt.Errorf("add food locale: %w", err)
+		err := WExec(`
+			insert into foods_locales
+			(food_id, lang_id, value, normal)
+			values (?, ?, ?, ?)
+			on conflict do update
+			set value = excluded.value,
+					normal = excluded.normal;
+		`, foodID, langID, locale.Value, internal.MustNormalizeStr(locale.Value))
+		if err != nil {
+			return 0, fmt.Errorf("add food locale: %w", err)
 		}
 	}
 
-	return nil
-}
-
-func AddFoodDetailFromSource(foodID, sourceID int64, detail internal.FoodDetail) error {
-	return Exec(`
-		insert into foods_details
-		(food_id, source_id, kcal)
-		values (?, ?, ?)
-		on conflict do update
-		set kcal = excluded.kcal;
-	`, foodID, sourceID, detail.KCal)
-}
-
-func AddFoodLocale(foodID, langID int64, locale internal.Locale) error {
-	return Exec(`
-		insert into foods_locales
-		(food_id, lang_id, value, value_normal)
-		values (?, ?, ?, ?)
-		on conflict do update
-		set value = excluded.value,
-				value_normal = excluded.value_normal;
-	`, foodID, langID, locale.Value, locale.Normal)
+	return foodID, nil
 }
 
 func LoadFood(foodID int64, food *internal.Food) error {
@@ -183,18 +206,17 @@ func LoadFood(foodID int64, food *internal.Food) error {
 
 	{ // locales
 		type rowt struct {
-			LangID        int64
-			Value, Normal string
+			LangID int64
+			Value  string
 		}
-		rows, err := RQuery[rowt]("select lang_id, value, value_normal from foods_locales where food_id = ?", foodID)
+		rows, err := RQuery[rowt]("select lang_id, value from foods_locales where food_id = ?", foodID)
 		if err != nil {
 			return err
 		}
 
 		for _, row := range rows {
 			food.Locales[row.LangID] = internal.Locale{
-				Value:  row.Value,
-				Normal: row.Normal,
+				Value: row.Value,
 			}
 		}
 	}

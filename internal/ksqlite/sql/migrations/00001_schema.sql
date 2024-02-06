@@ -2,7 +2,7 @@ create table langs (
 	id integer primary key,
 	name text not null
 );
-insert into langs (name) values ('es'), ('es_ES'), ('es_MX'), ('en'), ('en_US'), ('en_GB');
+insert into langs (name) values ('es'), ('en');
 
 create table users (
 	id integer primary key,
@@ -12,6 +12,7 @@ create table users (
 	lang integer references langs(id) not null,
 	created_at integer not null
 );
+insert into users (id, email, pass_hash, lang, created_at) values (0, 'a@a', 0, 1, 1, 0);
 
 create table families (
 	id integer primary key,
@@ -40,7 +41,7 @@ create table foods_locales (
 	food_id integer references foods(id) not null,
 	lang_id integer references langs(id) not null,
 	value text not null check(length(value) <= 512),
-	value_normal text not null,
+	normal text not null,
 	unique(food_id, lang_id)
 ); -- needs rowid for fts
 

@@ -48,8 +48,8 @@ func (c *Conn) Prepare(sql string, args ...interface{}) (stmt *gosqlite.Stmt, ou
 			return
 		}
 
-		if err := stmt.Reset(); err != nil {
-			outErr = fmt.Errorf("reset stmt: %w", internal.NewErrWithStackTrace(err))
+		if err := stmt.ClearBindings(); err != nil {
+			outErr = fmt.Errorf("clear binding: %w", internal.NewErrWithStackTrace(err))
 			return
 		}
 
@@ -69,5 +69,6 @@ func (c *Conn) Prepare(sql string, args ...interface{}) (stmt *gosqlite.Stmt, ou
 	}
 
 	c.stmts[sql] = stmt
+
 	return stmt, nil
 }

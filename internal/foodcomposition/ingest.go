@@ -65,7 +65,7 @@ func Ingest(ctx context.Context, csvPath string) (outErr error) {
 			return fmt.Errorf("parse kJ: %w", err)
 		}
 
-		err = ksqlite.AddFood(internal.Food{
+		_, err = ksqlite.AddFood(internal.Food{
 			DetailBySource: map[int64]internal.FoodDetail{
 				sourceID: {
 					KCal: internal.KJ2KCal(kJ) / 100,
@@ -73,8 +73,7 @@ func Ingest(ctx context.Context, csvPath string) (outErr error) {
 			},
 			Locales: map[int64]internal.Locale{
 				langID: {
-					Value:  rec[1],
-					Normal: internal.MustNormalizeStr(rec[1]),
+					Value: rec[1],
 				},
 			},
 		})

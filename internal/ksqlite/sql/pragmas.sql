@@ -1,7 +1,8 @@
 PRAGMA foreign_keys=ON;
 PRAGMA journal_mode=WAL;
 PRAGMA synchronous=NORMAL;
-PRAGMA busy_timeout=5000;
+PRAGMA busy_timeout=3000;
+-- PRAGMA wal_autocheckpoint=0;
 
 -- Number of pages, negative values specify kB
 PRAGMA cache_size=-32000; -- 32.768 MB

@@ -85,9 +85,9 @@ func Ingest(ctx context.Context, jsonsDir string) error {
 			lang := strings.ToLower(c.Name()[prefix : prefix+2])
 			switch lang {
 			case "gb", "us":
-				lang = "en_" + lang
+				lang = "en"
 			case "es", "mx":
-				lang = "es_" + lang
+				lang = "es"
 			default:
 				return fmt.Errorf("unknown lang %q", lang)
 			}
@@ -133,8 +133,7 @@ func Ingest(ctx context.Context, jsonsDir string) error {
 						ImageBySource: map[int64]internal.FoodImage{},
 						Locales: map[int64]internal.Locale{
 							langID: {
-								Value:  name,
-								Normal: internal.MustNormalizeStr(name),
+								Value: name,
 							},
 						},
 					}
@@ -152,7 +151,7 @@ func Ingest(ctx context.Context, jsonsDir string) error {
 						food.ImageBySource[sourceID] = foodImage
 					}
 
-					if err := ksqlite.AddFood(food); err != nil {
+					if _, err := ksqlite.AddFood(food); err != nil {
 						return fmt.Errorf("add food: %w", err)
 					}
 
