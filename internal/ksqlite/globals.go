@@ -128,6 +128,7 @@ func Optimize() error {
 	defer unlock()
 
 	err := w.conn.Exec(`
+		PRAGMA wal_checkpoint(TRUNCATE);
 		PRAGMA analysis_limit=0;
 		PRAGMA optimize;
 	`)
