@@ -12,7 +12,7 @@ create table users (
 	lang integer references langs(id) not null,
 	created_at integer not null
 );
-insert into users (id, email, pass_hash, lang, created_at) values (0, 'a@a', 0, 1, 1, 0);
+insert into users (id, email, pass_hash, verified_email, lang, created_at) values (0, 'a@a', 0, 1, 1, 0);
 
 create table families (
 	id integer primary key,
