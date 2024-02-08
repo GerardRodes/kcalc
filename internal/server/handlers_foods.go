@@ -9,14 +9,13 @@ import (
 	"github.com/GerardRodes/kcalc/internal"
 	"github.com/GerardRodes/kcalc/internal/fsstorage"
 	"github.com/GerardRodes/kcalc/internal/ksqlite"
-	"github.com/julienschmidt/httprouter"
 )
 
-func FoodsForm(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func FoodsForm(w http.ResponseWriter, r *http.Request) error {
 	return tmpl.ExecuteTemplate(w, "foods_form", newData())
 }
 
-func FoodsNew(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func FoodsNew(w http.ResponseWriter, r *http.Request) error {
 	const userID = 0
 	if err := r.ParseMultipartForm(1024 * 4); err != nil {
 		return fmt.Errorf("parse multipart form: %w", err)
@@ -84,7 +83,9 @@ func FoodsNew(w http.ResponseWriter, r *http.Request, p httprouter.Params) error
 		return fmt.Errorf("add food: %w", err)
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	fmt.Fprintf(w, "%d", foodID)
+	w.Header().Add("x-up-method", "get")
+	w.Header().Add("x-up-location", fmt.Sprintf("/cpanel?last_id=%d", foodID-1))
+	w.Header().Add("location", fmt.Sprintf("/cpanel?last_id=%d", foodID-1))
+	w.WriteHeader(http.StatusSeeOther)
 	return nil
 }

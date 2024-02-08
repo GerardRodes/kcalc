@@ -5,15 +5,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/julienschmidt/httprouter"
 	servertiming "github.com/mitchellh/go-server-timing"
 	"github.com/rs/zerolog/log"
 )
 
-type Controller func(w http.ResponseWriter, r *http.Request, p httprouter.Params) error
+type Controller func(w http.ResponseWriter, r *http.Request) error
 
-func NewHandler(c Controller) httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func NewHandler(c Controller) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		log.Debug().Str("method", r.Method).Str("uri", r.URL.RequestURI()).Msg("request")
 
 		h := http.TimeoutHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -24,7 +23,7 @@ func NewHandler(c Controller) httprouter.Handle {
 			defer cancel()
 			r = r.WithContext(ctx)
 
-			errorHandler(w, c(w, r, p))
+			errorHandler(w, c(w, r))
 		}), time.Second*9, "http handler request timeout")
 		h = servertiming.Middleware(h, nil)
 

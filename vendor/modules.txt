@@ -13,9 +13,6 @@ github.com/gertd/go-pluralize
 # github.com/golang/gddo v0.0.0-20180823221919-9d8ff1c67be5
 ## explicit
 github.com/golang/gddo/httputil/header
-# github.com/julienschmidt/httprouter v1.3.0
-## explicit; go 1.7
-github.com/julienschmidt/httprouter
 # github.com/jxskiss/base62 v1.1.0
 ## explicit; go 1.13
 github.com/jxskiss/base62

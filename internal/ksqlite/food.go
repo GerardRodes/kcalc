@@ -262,7 +262,7 @@ func LoadFood(foodID int64, food *internal.Food) error {
 			if row.SourceID != 0 {
 				food.ImageBySource[row.SourceID] = img
 			} else {
-				food.ImageBySource[row.UserID] = img
+				food.ImageByUser[row.UserID] = img
 			}
 		}
 	}

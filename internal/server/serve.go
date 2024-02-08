@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/GerardRodes/kcalc/internal"
-	"github.com/julienschmidt/httprouter"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
 
@@ -23,11 +22,13 @@ var (
 )
 
 func Serve(ctx context.Context) error {
-	router := httprouter.New()
-	router.ServeFiles("/assets/*filepath", http.Dir(internal.RootDir))
-	router.GET("/cpanel", NewHandler(CPanelGET))
-	router.GET("/foods/new", NewHandler(FoodsForm))
-	router.POST("/foods", NewHandler(FoodsNew))
+	router := http.NewServeMux()
+
+	router.Handle("GET /assets/",
+		http.StripPrefix("/assets/", http.FileServer(http.Dir(internal.RootDir))))
+	router.Handle("GET /cpanel", NewHandler(CPanelGET))
+	router.Handle("GET /foods/new", NewHandler(FoodsForm))
+	router.Handle("POST /foods", NewHandler(FoodsNew))
 
 	// todo:
 	// router.PanicHandler

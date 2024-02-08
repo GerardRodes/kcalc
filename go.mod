@@ -6,7 +6,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/eatonphil/gosqlite v0.9.0
 	github.com/gertd/go-pluralize v0.2.1
-	github.com/julienschmidt/httprouter v1.3.0
 	github.com/jxskiss/base62 v1.1.0
 	github.com/kolesa-team/go-webp v1.0.4
 	github.com/mitchellh/go-server-timing v1.0.1

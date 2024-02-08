@@ -89,6 +89,7 @@ func StoreImage(data []byte, mimetype string) (uri string, outErr error) {
 		img, err = jpeg.Decode(bytes.NewBuffer(data))
 	case "image/png":
 		img, err = png.Decode(bytes.NewBuffer(data))
+	// case "image/webp": TODO:
 	default:
 		return "", fmt.Errorf("unsupported image type %q", mimetype)
 	}

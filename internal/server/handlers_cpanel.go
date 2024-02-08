@@ -7,11 +7,10 @@ import (
 
 	"github.com/GerardRodes/kcalc/internal"
 	"github.com/GerardRodes/kcalc/internal/ksqlite"
-	"github.com/julienschmidt/httprouter"
 	servertiming "github.com/mitchellh/go-server-timing"
 )
 
-func CPanelGET(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func CPanelGET(w http.ResponseWriter, r *http.Request) error {
 	timing := servertiming.FromContext(r.Context())
 
 	var err error
@@ -41,6 +40,11 @@ func CPanelGET(w http.ResponseWriter, r *http.Request, p httprouter.Params) erro
 			foods, total, err = ksqlite.ListFoods(lastID)
 			if err != nil {
 				return fmt.Errorf("list foods: %w", err)
+			}
+
+			if len(foods) == 0 {
+				w.WriteHeader(http.StatusNotFound)
+				return nil
 			}
 
 			data["nextPageID"] = foods[len(foods)-1].ID

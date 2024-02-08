@@ -38,6 +38,12 @@
 							<td>{{ printf "%.2f" $detail.KCal }}</td>
 						</tr>
 						{{ end }}
+						{{ range $userID, $detail := .DetailByUser }}
+						<tr>
+							<th style="font-size: 0.75em;">user({{ $userID }})</th>
+							<td>{{ printf "%.2f" $detail.KCal }}</td>
+						</tr>
+						{{ end }}
 					</table>
 				</td>
 				<td> {{/* IMAGES */}}
@@ -45,6 +51,14 @@
 						{{ range $sourceID, $img := .ImageBySource }}
 						<tr>
 							<th style="font-size: 0.75em;">{{ index $.sourceByID $sourceID }}</th>
+							<td>
+								<img src="/assets/{{ $img.URI }}"  decoding="async" loading="lazy" />
+							</td>
+						</tr>
+						{{ end }}
+						{{ range $userID, $img := .ImageByUser }}
+						<tr>
+							<th style="font-size: 0.75em;">user({{ $userID }})</th>
 							<td>
 								<img src="/assets/{{ $img.URI }}"  decoding="async" loading="lazy" />
 							</td>
