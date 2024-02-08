@@ -36,11 +36,10 @@ func (c *Conn) Close() error {
 func (c *Conn) Prepare(sql string, args ...interface{}) (stmt *gosqlite.Stmt, outErr error) {
 	defer func() {
 		if outErr != nil {
-			delete(c.stmts, sql)
-
 			if stmt == nil {
 				return
 			}
+			delete(c.stmts, sql)
 
 			if err := stmt.Close(); err != nil {
 				outErr = errors.Join(outErr, fmt.Errorf("close stmt after bad bind: %w", internal.NewErrWithStackTrace(err)))

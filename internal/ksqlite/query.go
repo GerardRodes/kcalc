@@ -123,22 +123,26 @@ func Exec(c *Conn, sql string, args ...any) (outErr error) {
 	return nil
 }
 
-func TX(h func(c *Conn) error) (outErr error) {
+func TX(h func(c *Conn) error) error {
 	c, unlock := WConn()
 	defer unlock()
-	if err := c.conn.Begin(); err != nil {
+
+	if err := c.conn.BeginExclusive(); err != nil {
 		return fmt.Errorf("being: %w", internal.NewErrWithStackTrace(err))
 	}
 
-	defer func() {
-		if outErr != nil {
-			if err := c.conn.Rollback(); err != nil {
-				outErr = errors.Join(outErr, fmt.Errorf("rollback: %w", internal.NewErrWithStackTrace(err)))
-			}
-		} else if err := c.conn.Commit(); err != nil {
-			outErr = fmt.Errorf("commit: %w", internal.NewErrWithStackTrace(err))
+	err := h(c)
+	if err != nil {
+		if err := c.conn.Rollback(); err != nil {
+			return errors.Join(err, fmt.Errorf("rollback: %w", internal.NewErrWithStackTrace(err)))
 		}
-	}()
 
-	return h(c)
+		return err
+	}
+
+	if err := c.conn.Commit(); err != nil {
+		return fmt.Errorf("commit: %w", internal.NewErrWithStackTrace(err))
+	}
+
+	return nil
 }

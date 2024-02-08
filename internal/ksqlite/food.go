@@ -98,79 +98,80 @@ func AddFood(food internal.Food) (int64, error) {
 
 	var foodID int64
 
-	if len(collisionFoodIDs) > 1 {
-		// todo: merge
-		log.Debug().
-			Ints64("food ids", collisionFoodIDs).
-			Msg("food collision")
-		return 0, nil
-	} else if len(collisionFoodIDs) == 1 {
-		foodID = collisionFoodIDs[0]
-	} else {
-		var err error
-		foodID, err = WQueryOne[int64](
-			"insert into foods (created_at) values (?) returning id;",
-			time.Now().UnixNano(),
-		)
-		if err != nil {
-			return 0, fmt.Errorf("insert food: %w", err)
+	err := TX(func(c *Conn) error {
+		if len(collisionFoodIDs) > 1 {
+			// todo: merge
+			log.Debug().
+				Ints64("food ids", collisionFoodIDs).
+				Msg("food collision")
+			return nil
+		} else if len(collisionFoodIDs) == 1 {
+			foodID = collisionFoodIDs[0]
+		} else {
+			var err error
+			foodID, err = QueryOne[int64](c,
+				"insert into foods (created_at) values (?) returning id;",
+				time.Now().UnixNano(),
+			)
+			if err != nil {
+				return fmt.Errorf("insert food: %w", err)
+			}
 		}
-	}
 
-	{
-		for sourceID, detail := range food.DetailBySource {
-			err := WExec(`
+		{
+			for sourceID, detail := range food.DetailBySource {
+				err := Exec(c, `
 				insert into foods_details
 				(food_id, source_id, kcal)
 				values (?, ?, ?)
 				on conflict do update
 				set kcal = excluded.kcal;
 			`, foodID, sourceID, detail.KCal)
-			if err != nil {
-				return 0, fmt.Errorf("food(%d) source(%d) add food detail: %w", foodID, sourceID, err)
+				if err != nil {
+					return fmt.Errorf("food(%d) source(%d) add food detail: %w", foodID, sourceID, err)
+				}
 			}
-		}
-		for userID, detail := range food.DetailByUser {
-			err := WExec(`
+			for userID, detail := range food.DetailByUser {
+				err := Exec(c, `
 				insert into foods_details
 				(food_id, user_id, kcal)
 				values (?, ?, ?)
 				on conflict do update
 				set kcal = excluded.kcal;
 			`, foodID, userID, detail.KCal)
-			if err != nil {
-				return 0, fmt.Errorf("food(%d) user(%d) add food detail: %w", foodID, userID, err)
+				if err != nil {
+					return fmt.Errorf("food(%d) user(%d) add food detail: %w", foodID, userID, err)
+				}
 			}
 		}
-	}
 
-	{
-		for sourceID, img := range food.ImageBySource {
-			err := WExec(`
+		{
+			for sourceID, img := range food.ImageBySource {
+				err := Exec(c, `
 				insert into foods_images
 				(food_id, source_id, kind, uri)
 				values (?, ?, ?, ?);
 			`, foodID, sourceID, img.Kind, img.URI)
-			if err != nil {
-				spew.Dump(foodID, sourceID, img)
-				return 0, fmt.Errorf("food(%d) source(%d) add food image: %w", foodID, sourceID, err)
+				if err != nil {
+					spew.Dump(foodID, sourceID, img)
+					return fmt.Errorf("food(%d) source(%d) add food image: %w", foodID, sourceID, err)
+				}
 			}
-		}
-		for userID, img := range food.ImageByUser {
-			err := WExec(`
+			for userID, img := range food.ImageByUser {
+				err := Exec(c, `
 				insert into foods_images
 				(food_id, user_id, kind, uri)
 				values (?, ?, ?, ?);
 			`, foodID, userID, img.Kind, img.URI)
-			if err != nil {
-				spew.Dump(foodID, userID, img)
-				return 0, fmt.Errorf("food(%d) user(%d) add food image: %w", foodID, userID, err)
+				if err != nil {
+					spew.Dump(foodID, userID, img)
+					return fmt.Errorf("food(%d) user(%d) add food image: %w", foodID, userID, err)
+				}
 			}
 		}
-	}
 
-	for langID, locale := range food.Locales {
-		err := WExec(`
+		for langID, locale := range food.Locales {
+			err := Exec(c, `
 			insert into foods_locales
 			(food_id, lang_id, value, normal)
 			values (?, ?, ?, ?)
@@ -178,9 +179,14 @@ func AddFood(food internal.Food) (int64, error) {
 			set value = excluded.value,
 					normal = excluded.normal;
 		`, foodID, langID, locale.Value, internal.MustNormalizeStr(locale.Value))
-		if err != nil {
-			return 0, fmt.Errorf("add food locale: %w", err)
+			if err != nil {
+				return fmt.Errorf("add food locale: %w", err)
+			}
 		}
+		return nil
+	})
+	if err != nil {
+		return 0, err
 	}
 
 	return foodID, nil
