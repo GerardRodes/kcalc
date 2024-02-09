@@ -24,14 +24,13 @@ var (
 func Serve(ctx context.Context) error {
 	router := http.NewServeMux()
 
-	router.Handle("GET /assets/",
-		http.StripPrefix("/assets/", http.FileServer(http.Dir(internal.RootDir))))
+	router.Handle("GET /assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir(internal.RootDir))))
 	router.Handle("GET /cpanel", NewHandler(CPanelGET))
 	router.Handle("GET /foods/new", NewHandler(FoodsForm))
 	router.Handle("POST /foods", NewHandler(FoodsNew))
 
 	// todo:
-	// router.NotFound
+	// not found router.Handle("/")
 
 	// If I ever implement hijacked live lived connections
 	// ie: SSE, WebSockets, ...
