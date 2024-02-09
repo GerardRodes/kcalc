@@ -2,10 +2,12 @@ package server
 
 import (
 	"context"
+	"embed"
 	"errors"
 	"flag"
 	"fmt"
 	"net/http"
+	"path/filepath"
 	"time"
 
 	"github.com/GerardRodes/kcalc/internal"
@@ -21,13 +23,37 @@ var (
 	argPProfPort = flag.String("pprof-port", "8081", "")
 )
 
+//go:embed assets
+var assets embed.FS
+
 func Serve(ctx context.Context) error {
 	router := http.NewServeMux()
 
-	router.Handle("GET /assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir(internal.RootDir))))
-	router.Handle("GET /cpanel", NewHandler(CPanelGET))
-	router.Handle("GET /foods/new", NewHandler(FoodsForm))
-	router.Handle("POST /foods", NewHandler(FoodsNew))
+	{ // CPANEL
+		router.Handle("GET /cpanel", NewHandler(CPanelGET))
+	}
+	{ // FOODS
+		router.Handle("GET /foods/new", NewHandler(FoodsForm))
+		router.Handle("GET /foods", NewHandler(FoodsList))
+		router.Handle("POST /foods", NewHandler(FoodsNew))
+	}
+	{ // COOKING
+		router.Handle("GET /cookings", NewHandler(CookingList))
+		router.Handle("POST /cookings", NewHandler(CookingNew))
+		router.Handle("GET /cookings/{id}", NewHandler(CookingView))
+		router.Handle("PATCH /cookings/{id}", NewHandler(CookingUpdate))
+		router.Handle("POST /cookings/{id}/foods/{foodID}", NewHandler(CookingAddFood))
+		router.Handle("POST /cookings/{id}/group", NewHandler(CookingGroupFoods))
+		router.Handle("POST /cookings/{id}/cookings/{subCookingID}", NewHandler(CookingAddCooking))
+	}
+	{ // OTHER
+		router.Handle("GET /content/",
+			http.StripPrefix("/content/",
+				http.FileServer(http.Dir(
+					filepath.Join(internal.RootDir, "content")))))
+		router.Handle("GET /assets/", http.FileServerFS(assets))
+		router.Handle("/", http.RedirectHandler("/cookings", http.StatusSeeOther))
+	}
 
 	// todo:
 	// not found router.Handle("/")
@@ -76,10 +102,10 @@ func Serve(ctx context.Context) error {
 		g.Go(func() error {
 			<-ctx.Done()
 
-			ctxSD, cancel := context.WithTimeout(context.Background(), time.Second*5)
+			ctxShutdown, cancel := context.WithTimeout(context.Background(), time.Second*5)
 			defer cancel()
 
-			err := srv.Shutdown(ctxSD)
+			err := srv.Shutdown(ctxShutdown)
 			if err != nil {
 				return fmt.Errorf("shutdown: %w", err)
 			}

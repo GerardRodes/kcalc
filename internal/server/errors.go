@@ -9,7 +9,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var ErrBadParam = errors.New("invalid query string param")
+var (
+	ErrBadParam     = errors.New("invalid query string param")
+	ErrForbidden    = errors.New(http.StatusText(http.StatusForbidden))
+	ErrUnauthorized = errors.New(http.StatusText(http.StatusUnauthorized))
+)
 
 func errorHandler(w http.ResponseWriter, err error) {
 	if err == nil {
@@ -18,26 +22,35 @@ func errorHandler(w http.ResponseWriter, err error) {
 
 	lgr := log.Err(err)
 
+	priv := err
+	code := http.StatusInternalServerError
+	pub := errors.New(http.StatusText(http.StatusInternalServerError))
+
 	var serr internal.SErr
 	if errors.As(err, &serr) {
-		err = serr.Public
-		lgr = lgr.Err(serr.Private).Str("public", serr.Public.Error())
+		pub = serr.Public
+		priv = serr.Private
+		lgr = lgr.Err(priv).Str("public", pub.Error())
+		switch {
+		case errors.Is(pub, ErrBadParam):
+			code = http.StatusBadRequest
+		case errors.Is(pub, ErrForbidden):
+			code = http.StatusForbidden
+		case errors.Is(pub, ErrUnauthorized):
+			code = http.StatusUnauthorized
+		case errors.Is(pub, internal.ErrInvalid):
+			code = http.StatusUnprocessableEntity
+		}
 	}
 
-	code := http.StatusInternalServerError
-	switch {
-	case errors.Is(err, ErrBadParam):
-		code = http.StatusBadRequest
-	case errors.Is(err, internal.ErrInvalid):
-		code = http.StatusUnprocessableEntity
+	if !internal.IsProd {
+		var errst internal.ErrWithStackTrace
+		if errors.As(priv, &errst) {
+			os.Stderr.Write(errst.Stack)
+		}
 	}
 
 	lgr.Int("status", code).Msg("http error")
 
-	var errst internal.ErrWithStackTrace
-	if errors.As(err, &errst) {
-		os.Stderr.Write(errst.Stack)
-	}
-
-	http.Error(w, err.Error(), code)
+	http.Error(w, pub.Error(), code)
 }

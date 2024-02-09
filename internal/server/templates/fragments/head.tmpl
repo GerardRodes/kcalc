@@ -1,9 +1,16 @@
-{{- define "cpanel_head" -}}
-
+{{- define "head" -}}
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KCalc | Panel de control</title>
 
+<title>kcalc{{ if . }} | {{ . }}{{end}}</title>
+
+<link href='/assets/icon.webp' rel='shortcut icon' type='image/webp'>
+<style>
+	html {
+		font-size: 16px;
+		font-family: system-ui, sans-serif;
+	}
+</style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/unpoly@3.7.3/unpoly.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/unpoly@3.7.3/unpoly.min.js"></script>
 <script>
@@ -11,5 +18,6 @@
 	up.link.config.instantSelectors.push('a[href]')
 	up.link.config.preloadSelectors.push('a[href]')
 	up.link.config.preloadSelectors.push('[up-href]')
+	up.form.config.submitSelectors.push(['form'])
 </script>
 {{- end -}}

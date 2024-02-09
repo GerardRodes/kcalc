@@ -1,0 +1,36 @@
+{{- define "cooking" -}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	{{ template "head" "Cooking" }}
+</head>
+<body>
+	<h1>Cooking</h1>
+	<pre>{{ .cooking | dump }}</pre>
+
+	<div>
+		<form
+			method="get"
+			action="/foods"
+			up-autosubmit
+			up-watch-delay="150"
+			up-focus="keep"
+			up-target="#foods-list"
+		>
+			<input
+				type="text"
+				placeholder="search foods"
+				name="search"
+			/>
+			<button
+				up-href="/foods/new"
+				up-layer="new"
+				up-mode="modal"
+				up-target="form"
+			>create new food</button>
+		</form>
+		<div id="foods-list"></div>
+	</div>
+</body>
+</html>
+{{- end -}}

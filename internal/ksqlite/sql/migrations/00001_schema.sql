@@ -6,13 +6,17 @@ insert into langs (name) values ('es'), ('en');
 
 create table users (
 	id integer primary key,
+	role text not null,
 	email text check(length(email) <= 255) not null,
 	pass_hash blob check(length(pass_hash) <= 255) not null,
 	verified_email boolean not null default 'false',
 	lang integer references langs(id) not null,
 	created_at integer not null
 );
-insert into users (id, email, pass_hash, verified_email, lang, created_at) values (0, 'a@a', 0, 1, 1, 0);
+insert into users
+(id, role, email, pass_hash, verified_email, lang, created_at)
+values
+(0, 'admin', 'a@a', 0, 1, 1, 0);
 
 create table families (
 	id integer primary key,

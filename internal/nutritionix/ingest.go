@@ -130,7 +130,7 @@ func Ingest(ctx context.Context, jsonsDir string) error {
 						DetailBySource: map[int64]internal.FoodDetail{
 							sourceID: foodDetail,
 						},
-						ImageBySource: map[int64]internal.FoodImage{},
+						ImageBySource: map[int64]internal.Image{},
 						Locales: map[int64]internal.Locale{
 							langID: {
 								Value: name,

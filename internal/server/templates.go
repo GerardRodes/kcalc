@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	"github.com/GerardRodes/kcalc/internal"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 )
 
@@ -32,6 +33,29 @@ var tmpl = template.New("").Funcs(template.FuncMap{
 	"last_iter": func(v any, i int64) bool {
 		return refVal(v).Len() == int(i+1)
 	},
+	"dump": func(v any) string {
+		return spew.Sdump(v)
+	},
+	"get_locale": func(l map[int64]internal.Locale, langID int64) string {
+		if v, ok := l[langID]; ok && v.Value != "" {
+			return v.Value
+		}
+
+		if v, ok := l[internal.LangsID["en"]]; ok && v.Value != "" {
+			return v.Value
+		}
+		if v, ok := l[internal.LangsID["es"]]; ok && v.Value != "" {
+			return v.Value
+		}
+
+		for _, v := range l {
+			if v.Value != "" {
+				return v.Value
+			}
+		}
+
+		return ""
+	},
 })
 
 func init() {
@@ -44,9 +68,12 @@ func init() {
 	}
 }
 
-func newData() map[any]any {
-	return map[any]any{
-		"langByID":   internal.LangByID,
-		"sourceByID": internal.SourceByID,
+func newData(data map[any]any) map[any]any {
+	if data == nil {
+		data = map[any]any{}
 	}
+	data["langID"] = internal.LangsID["en"]
+	data["langByID"] = internal.LangByID
+	data["sourceByID"] = internal.SourceByID
+	return data
 }

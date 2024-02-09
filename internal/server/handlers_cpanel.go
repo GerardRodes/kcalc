@@ -15,7 +15,7 @@ func CPanelGET(w http.ResponseWriter, r *http.Request) error {
 
 	var err error
 	var foods []internal.Food
-	data := newData()
+	data := newData(nil)
 
 	queryTiming := timing.NewMetric("query").Start()
 	{

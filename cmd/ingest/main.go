@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 
 	"github.com/GerardRodes/kcalc/internal"
-	"github.com/GerardRodes/kcalc/internal/foodcomposition"
 	"github.com/GerardRodes/kcalc/internal/fsstorage"
 	"github.com/GerardRodes/kcalc/internal/ksqlite"
 	"github.com/GerardRodes/kcalc/internal/nutritionix"
@@ -27,7 +26,7 @@ func run(ctx context.Context) (outErr error) {
 		}
 	}
 
-	for _, dir := range []string{filepath.Join(internal.RootDir, "images")} {
+	for _, dir := range []string{filepath.Join(internal.RootDir, "content/images")} {
 		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
 			return fmt.Errorf("make dir for db: %w", err)
 		}
@@ -55,10 +54,11 @@ func run(ctx context.Context) (outErr error) {
 		return fmt.Errorf("ingest nutritionix: %w", err)
 	}
 
-	err = foodcomposition.Ingest(ctx, "data/ready/foodcomposition/concise-14-edition.csv")
-	if err != nil {
-		return fmt.Errorf("ingest foodcomposition: %w", err)
-	}
+	// no me gusta
+	// err = foodcomposition.Ingest(ctx, "data/ready/foodcomposition/concise-14-edition.csv")
+	// if err != nil {
+	// 	return fmt.Errorf("ingest foodcomposition: %w", err)
+	// }
 
 	return nil
 }

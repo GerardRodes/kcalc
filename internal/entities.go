@@ -3,6 +3,7 @@ package internal
 type (
 	User struct {
 		ID            int64
+		Role          string
 		Email         string
 		VerifiedEmail bool
 		Lang          int64
@@ -16,5 +17,8 @@ type (
 	Source struct {
 		ID   int64
 		Name string
+	}
+	Session struct {
+		User User
 	}
 )

@@ -13,7 +13,44 @@ import (
 )
 
 func FoodsForm(w http.ResponseWriter, r *http.Request) error {
-	return tmpl.ExecuteTemplate(w, "foods_form", newData())
+	return tmpl.ExecuteTemplate(w, "foods_form", newData(nil))
+}
+
+func FoodsList(w http.ResponseWriter, r *http.Request) error {
+	s, err := SessionFromReq(r)
+	if err != nil {
+		return err
+	}
+
+	foods, err := ksqlite.FindFoods(r.URL.Query().Get("search"))
+	if err != nil {
+		return fmt.Errorf("find foods: %w", err)
+	}
+
+	type foodTmpl struct {
+		ID    int64
+		Name  string
+		Image internal.Image
+	}
+	foodsTmpl := make([]foodTmpl, len(foods))
+	for i, food := range foods {
+		foodsTmpl[i].ID = food.ID
+		foodsTmpl[i].Name = food.Name(s.User.Lang)
+
+		if img, ok := food.ImageByUser[s.User.ID]; ok && img.URI != "" {
+			foodsTmpl[i].Image = img
+		} else {
+			for _, img := range food.ImageBySource {
+				foodsTmpl[i].Image = img
+				break
+			}
+		}
+	}
+
+	return tmpl.ExecuteTemplate(w, "foods_list", newData(map[any]any{
+		"foods":   foodsTmpl,
+		"session": s,
+	}))
 }
 
 func FoodsNew(w http.ResponseWriter, r *http.Request) error {
@@ -24,7 +61,7 @@ func FoodsNew(w http.ResponseWriter, r *http.Request) error {
 
 	food := internal.Food{
 		DetailByUser: map[int64]internal.FoodDetail{},
-		ImageByUser:  map[int64]internal.FoodImage{},
+		ImageByUser:  map[int64]internal.Image{},
 		Locales:      map[int64]internal.Locale{},
 	}
 
@@ -75,7 +112,7 @@ func FoodsNew(w http.ResponseWriter, r *http.Request) error {
 				return fmt.Errorf("store image: %w", err)
 			}
 
-			food.ImageByUser[userID] = internal.FoodImage{URI: uri}
+			food.ImageByUser[userID] = internal.Image{URI: uri}
 		}
 	}
 
@@ -86,6 +123,6 @@ func FoodsNew(w http.ResponseWriter, r *http.Request) error {
 
 	w.Header().Add("x-up-method", "get")
 	w.Header().Add("x-up-location", fmt.Sprintf("/cpanel?last_id=%d", foodID-1))
-	http.Redirect(w, r, fmt.Sprintf("/cpanel?last_id=%d", foodID-1), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/cpanel?last_id=%d", foodID-1), http.StatusFound)
 	return nil
 }

@@ -35,7 +35,13 @@ func ListFoods(lastID int64) ([]internal.Food, int64, error) {
 	return foods, total, nil
 }
 
+// find foods with images of user or family
+// todo: func FindFoodsByUser(userID int64, search string)
 func FindFoods(search string) ([]internal.Food, error) {
+	if search == "" {
+		return nil, nil
+	}
+
 	foodIDs, err := RQuery[int64](`
 		select distinct fts_fl.food_id
 		from fts_foods_locales fts_fl
@@ -201,10 +207,10 @@ func LoadFood(foodID int64, food *internal.Food) error {
 		food.DetailByUser = map[int64]internal.FoodDetail{}
 	}
 	if food.ImageBySource == nil {
-		food.ImageBySource = map[int64]internal.FoodImage{}
+		food.ImageBySource = map[int64]internal.Image{}
 	}
 	if food.ImageByUser == nil {
-		food.ImageByUser = map[int64]internal.FoodImage{}
+		food.ImageByUser = map[int64]internal.Image{}
 	}
 	if food.Locales == nil {
 		food.Locales = map[int64]internal.Locale{}
@@ -258,7 +264,7 @@ func LoadFood(foodID int64, food *internal.Food) error {
 		}
 
 		for _, row := range rows {
-			img := internal.FoodImage{URI: row.URI}
+			img := internal.Image{URI: row.URI}
 			if row.SourceID != 0 {
 				food.ImageBySource[row.SourceID] = img
 			} else {

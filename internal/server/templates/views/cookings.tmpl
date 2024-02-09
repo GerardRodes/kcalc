@@ -1,0 +1,18 @@
+{{- define "cookings" -}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	{{ template "head" "Cookings" }}
+</head>
+<body>
+	Tu lista de cocinados
+
+	<form
+		action="/cookings"
+		method="post"
+	>
+		<button type="submit">a cocinar!</button>
+	</form>
+</body>
+</html>
+{{- end -}}

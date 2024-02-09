@@ -45,15 +45,15 @@ func Init() error {
 	return nil
 }
 
-func DownloadAndStoreImage(rawURL string) (foodImage internal.FoodImage, outErr error) {
+func DownloadAndStoreImage(rawURL string) (foodImage internal.Image, outErr error) {
 	parsedURL, err := url.Parse(rawURL)
 	if err != nil {
-		return internal.FoodImage{}, fmt.Errorf("parse url: %w", err)
+		return internal.Image{}, fmt.Errorf("parse url: %w", err)
 	}
 
 	res, deleteCache, err := CachedGet(parsedURL.String())
 	if err != nil {
-		return internal.FoodImage{}, fmt.Errorf("download img: %w", err)
+		return internal.Image{}, fmt.Errorf("download img: %w", err)
 	}
 	defer func() {
 		if outErr != nil {
@@ -63,19 +63,19 @@ func DownloadAndStoreImage(rawURL string) (foodImage internal.FoodImage, outErr 
 
 	imgData, err := io.ReadAll(res.Body)
 	if err != nil {
-		return internal.FoodImage{}, fmt.Errorf("read all: %w", err)
+		return internal.Image{}, fmt.Errorf("read all: %w", err)
 	}
 
 	if err := res.Body.Close(); err != nil {
-		return internal.FoodImage{}, fmt.Errorf("close body: %w", err)
+		return internal.Image{}, fmt.Errorf("close body: %w", err)
 	}
 
 	uri, err := StoreImage(imgData, mime.TypeByExtension(filepath.Ext(rawURL)))
 	if err != nil {
-		return internal.FoodImage{}, err
+		return internal.Image{}, err
 	}
 
-	return internal.FoodImage{
+	return internal.Image{
 		URI: uri,
 		// Kind: "TODO",
 	}, nil
@@ -117,7 +117,7 @@ func StoreImage(data []byte, mimetype string) (uri string, outErr error) {
 	}()
 	name := string(b62enc.FormatUint(newID))
 	uri = filepath.Join("images", name+".webp")
-	output, err := os.Create(filepath.Join(internal.RootDir, uri))
+	output, err := os.Create(filepath.Join(internal.RootDir, "content", uri))
 	if err != nil {
 		return "", fmt.Errorf("create webp: %w", err)
 	}
