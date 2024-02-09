@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/GerardRodes/kcalc/internal"
 	"github.com/GerardRodes/kcalc/internal/ksqlite"
 	"github.com/segmentio/ksuid"
 )
@@ -55,4 +56,45 @@ func CookingGroupFoods(w http.ResponseWriter, r *http.Request) error {
 
 func CookingAddCooking(w http.ResponseWriter, r *http.Request) error {
 	return nil
+}
+
+func CookingListAvailableFoods(w http.ResponseWriter, r *http.Request) error {
+	s, err := SessionFromReq(r)
+	if err != nil {
+		return err
+	}
+
+	foods, err := ksqlite.FindCookingAvailableFoods(
+		s.User.ID,
+		r.PathValue("id"),
+		r.URL.Query().Get("search"),
+	)
+	if err != nil {
+		return fmt.Errorf("find foods: %w", err)
+	}
+
+	type foodTmpl struct {
+		ID    int64
+		Name  string
+		Image internal.Image
+	}
+	foodsTmpl := make([]foodTmpl, len(foods))
+	for i, food := range foods {
+		foodsTmpl[i].ID = food.ID
+		foodsTmpl[i].Name = food.Name(s.User.Lang)
+
+		if img, ok := food.ImageByUser[s.User.ID]; ok && img.URI != "" {
+			foodsTmpl[i].Image = img
+		} else {
+			for _, img := range food.ImageBySource {
+				foodsTmpl[i].Image = img
+				break
+			}
+		}
+	}
+
+	return tmpl.ExecuteTemplate(w, "foods_list", newData(map[any]any{
+		"foods":   foodsTmpl,
+		"session": s,
+	}))
 }

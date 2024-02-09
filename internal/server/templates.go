@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-//go:embed templates/*/*.tmpl
+//go:embed templates/**/*.tmpl
 var gohtml embed.FS
 
 func refVal(v any) reflect.Value {

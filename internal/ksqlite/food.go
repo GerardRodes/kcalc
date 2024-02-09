@@ -275,3 +275,7 @@ func LoadFood(foodID int64, food *internal.Food) error {
 
 	return nil
 }
+
+func FindCookingAvailableFoods(userID int64, cookingID string, search string) ([]internal.Food, error) {
+	return nil, nil
+}
