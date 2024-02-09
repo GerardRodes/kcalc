@@ -33,7 +33,7 @@ func CPanelGET(w http.ResponseWriter, r *http.Request) error {
 			if v := q.Get("last_id"); v != "" {
 				lastID, err = strconv.ParseInt(v, 10, 64)
 				if err != nil {
-					return internal.NewSErr("invalid param last_id", err, ErrBadParam)
+					return internal.NewSErr(fmt.Errorf("%w: last_id", ErrBadParam), err)
 				}
 			}
 			var total int64

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -45,12 +46,12 @@ func FoodsNew(w http.ResponseWriter, r *http.Request) error {
 		case "kcal":
 			kcal, err = strconv.ParseFloat(vals[0], 64)
 			if err != nil {
-				return internal.NewSErr("invalid kcal format", err)
+				return internal.NewSErr(errors.New("invalid kcal format"), err)
 			}
 		case "g":
 			g, err = strconv.ParseFloat(vals[0], 64)
 			if err != nil {
-				return internal.NewSErr("invalid g format", err)
+				return internal.NewSErr(errors.New("invalid g format"), err)
 			}
 		}
 	}

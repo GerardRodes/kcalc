@@ -5,7 +5,10 @@ import (
 	"runtime/debug"
 )
 
-var ErrNotFound = errors.New("not found")
+var (
+	ErrNotFound = errors.New("not found")
+	ErrInvalid  = errors.New("invalid")
+)
 
 type ErrWithStackTrace struct {
 	error
@@ -38,10 +41,10 @@ type SErr struct {
 	Public, Private error
 }
 
-func NewSErr(msg string, errs ...error) SErr {
+func NewSErr(public, private error) SErr {
 	return SErr{
-		Public:  errors.New(msg),
-		Private: errors.Join(append(errs, errors.New(msg))...),
+		Public:  public,
+		Private: private,
 	}
 }
 

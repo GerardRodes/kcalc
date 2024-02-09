@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -14,20 +13,22 @@ type Controller func(w http.ResponseWriter, r *http.Request) error
 
 func NewHandler(c Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		defer func() {
-			v := recover()
-			if v == nil {
-				return
-			}
+		// defer func() {
+		// 	v := recover()
+		// 	if v == nil {
+		// 		return
+		// 	}
 
-			err, ok := v.(error)
-			if !ok {
-				err = fmt.Errorf("%v", v)
-			}
+		// 	err, ok := v.(error)
+		// 	if !ok {
+		// 		err = fmt.Errorf("%v", v)
+		// 	}
 
-			log.Err(err).Msg("recovered from panic")
-			w.WriteHeader(http.StatusInternalServerError)
-		}()
+		// 	log.Err(err).Msg("recovered from panic")
+		// 	os.Stderr.Write(debug.Stack())
+
+		// 	w.WriteHeader(http.StatusInternalServerError)
+		// }()
 
 		log.Debug().Str("method", r.Method).Str("uri", r.URL.RequestURI()).Msg("request")
 

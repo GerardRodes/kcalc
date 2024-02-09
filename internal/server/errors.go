@@ -20,14 +20,16 @@ func errorHandler(w http.ResponseWriter, err error) {
 
 	var serr internal.SErr
 	if errors.As(err, &serr) {
-		err = serr.Private
-		lgr = lgr.Str("public", serr.Public.Error())
+		err = serr.Public
+		lgr = lgr.Err(serr.Private).Str("public", serr.Public.Error())
 	}
 
 	code := http.StatusInternalServerError
 	switch {
 	case errors.Is(err, ErrBadParam):
 		code = http.StatusBadRequest
+	case errors.Is(err, internal.ErrInvalid):
+		code = http.StatusUnprocessableEntity
 	}
 
 	lgr.Int("status", code).Msg("http error")
@@ -37,5 +39,5 @@ func errorHandler(w http.ResponseWriter, err error) {
 		os.Stderr.Write(errst.Stack)
 	}
 
-	http.Error(w, serr.Public.Error(), code)
+	http.Error(w, err.Error(), code)
 }

@@ -17,6 +17,7 @@ import (
 	"github.com/GerardRodes/kcalc/internal"
 	"github.com/GerardRodes/kcalc/internal/ksqlite"
 	"github.com/jxskiss/base62"
+	"github.com/kolesa-team/go-webp/decoder"
 	"github.com/kolesa-team/go-webp/encoder"
 	"github.com/kolesa-team/go-webp/webp"
 	"github.com/nfnt/resize"
@@ -84,14 +85,18 @@ func StoreImage(data []byte, mimetype string) (uri string, outErr error) {
 	var err error
 	var img image.Image
 
+	buf := bytes.NewBuffer(data)
 	switch mimetype {
 	case "image/jpeg":
-		img, err = jpeg.Decode(bytes.NewBuffer(data))
+		img, err = jpeg.Decode(buf)
 	case "image/png":
-		img, err = png.Decode(bytes.NewBuffer(data))
-	// case "image/webp": TODO:
+		img, err = png.Decode(buf)
+	case "image/webp":
+		img, err = webp.Decode(buf, &decoder.Options{
+			UseThreads: true,
+		})
 	default:
-		return "", fmt.Errorf("unsupported image type %q", mimetype)
+		return "", fmt.Errorf("%w: not supported image type %q", internal.ErrInvalid, mimetype)
 	}
 
 	if err != nil {
