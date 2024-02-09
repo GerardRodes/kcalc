@@ -85,7 +85,6 @@ func FoodsNew(w http.ResponseWriter, r *http.Request) error {
 
 	w.Header().Add("x-up-method", "get")
 	w.Header().Add("x-up-location", fmt.Sprintf("/cpanel?last_id=%d", foodID-1))
-	w.Header().Add("location", fmt.Sprintf("/cpanel?last_id=%d", foodID-1))
-	w.WriteHeader(http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/cpanel?last_id=%d", foodID-1), http.StatusSeeOther)
 	return nil
 }

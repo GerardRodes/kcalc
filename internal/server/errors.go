@@ -21,7 +21,6 @@ func errorHandler(w http.ResponseWriter, err error) {
 	var serr internal.SErr
 	if errors.As(err, &serr) {
 		err = serr.Private
-		_, _ = w.Write([]byte(serr.Public.Error()))
 		lgr = lgr.Str("public", serr.Public.Error())
 	}
 
@@ -31,11 +30,12 @@ func errorHandler(w http.ResponseWriter, err error) {
 		code = http.StatusBadRequest
 	}
 
-	w.WriteHeader(code)
 	lgr.Int("status", code).Msg("http error")
 
 	var errst internal.ErrWithStackTrace
 	if errors.As(err, &errst) {
 		os.Stderr.Write(errst.Stack)
 	}
+
+	http.Error(w, serr.Public.Error(), code)
 }

@@ -31,7 +31,6 @@ func Serve(ctx context.Context) error {
 	router.Handle("POST /foods", NewHandler(FoodsNew))
 
 	// todo:
-	// router.PanicHandler
 	// router.NotFound
 
 	// If I ever implement hijacked live lived connections
