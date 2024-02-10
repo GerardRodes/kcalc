@@ -277,5 +277,31 @@ func LoadFood(foodID int64, food *internal.Food) error {
 }
 
 func FindCookingAvailableFoods(userID int64, cookingID string, search string) ([]internal.Food, error) {
-	return nil, nil
+	if search == "" {
+		return nil, nil
+	}
+
+	foodIDs, err := RQuery[int64](`
+		select distinct fts_fl.food_id
+		from fts_foods_locales fts_fl
+		where fts_fl.value match ?
+			and fts_fl.food_id not in (
+						select food_id
+						from rel_cookings_foods
+						where cooking_id = ?)
+		order by rank
+		limit ?
+	`, search+"*", cookingID, internal.PageSize*10)
+	if err != nil {
+		return nil, err
+	}
+
+	foods := make([]internal.Food, len(foodIDs))
+	for i, foodID := range foodIDs {
+		if err := LoadFood(foodID, &foods[i]); err != nil {
+			return nil, err
+		}
+	}
+
+	return foods, nil
 }
