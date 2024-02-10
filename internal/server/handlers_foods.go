@@ -22,9 +22,13 @@ func FoodsList(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	foods, err := ksqlite.FindFoods(r.URL.Query().Get("search"))
+	search := r.URL.Query().Get("search")
+	foods, err := ksqlite.FindFoods(search)
 	if err != nil {
-		return fmt.Errorf("find foods: %w", err)
+		return internal.NewSErr(
+			fmt.Errorf("bad search: %w", internal.ErrInvalid),
+			fmt.Errorf("find foods: %w", err),
+		)
 	}
 
 	type foodTmpl struct {
@@ -50,6 +54,7 @@ func FoodsList(w http.ResponseWriter, r *http.Request) error {
 	return tmpl.ExecuteTemplate(w, "foods_list", newData(map[any]any{
 		"foods":   foodsTmpl,
 		"session": s,
+		"search":  search,
 	}))
 }
 

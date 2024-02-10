@@ -3,6 +3,7 @@ package server
 import (
 	"embed"
 	"html/template"
+	"math/rand"
 	"path/filepath"
 	"reflect"
 
@@ -35,6 +36,9 @@ var tmpl = template.New("").Funcs(template.FuncMap{
 	},
 	"dump": func(v any) string {
 		return spew.Sdump(v)
+	},
+	"rand_uint64": func() uint64 {
+		return rand.Uint64()
 	},
 	"get_locale": func(l map[int64]internal.Locale, langID int64) string {
 		if v, ok := l[langID]; ok && v.Value != "" {

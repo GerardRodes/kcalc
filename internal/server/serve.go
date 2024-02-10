@@ -34,18 +34,17 @@ func Serve(ctx context.Context) error {
 	}
 	{ // FOODS
 		router.Handle("GET /foods/new", NewHandler(FoodsForm))
-		// router.Handle("GET /foods", NewHandler(FoodsList))
+		router.Handle("GET /foods", NewHandler(FoodsList))
 		router.Handle("POST /foods", NewHandler(FoodsNew))
 	}
 	{ // COOKING
 		router.Handle("GET /cookings", NewHandler(CookingList))
 		router.Handle("POST /cookings", NewHandler(CookingNew))
 		router.Handle("GET /cookings/{id}", NewHandler(CookingView))
-		router.Handle("GET /cookings/{id}/available-foods", NewHandler(CookingListAvailableFoods))
 		router.Handle("PATCH /cookings/{id}", NewHandler(CookingUpdate))
-		router.Handle("POST /cookings/{id}/foods/{foodID}", NewHandler(CookingAddFood))
+		router.Handle("GET /cookings/{id}/available-foods", NewHandler(CookingListAvailableFoods))
 		router.Handle("POST /cookings/{id}/group", NewHandler(CookingGroupFoods))
-		router.Handle("POST /cookings/{id}/cookings/{subCookingID}", NewHandler(CookingAddCooking))
+		router.Handle("POST /cookings/{id}/cookings/{subCookingID}", NewHandler(CookingAddSubCooking))
 	}
 	{ // OTHER
 		router.Handle("GET /content/",

@@ -11,16 +11,17 @@
 	<div>
 		<form
 			method="get"
-			action="/foods"
-			up-autosubmit
+			action="/cookings/{{.cookingID}}/available-foods"
 			up-watch-delay="150"
 			up-focus="keep"
 			up-target="#foods-list"
+			up-autosubmit
 		>
 			<input
 				type="text"
 				placeholder="search foods"
 				name="search"
+				autocomplete="nope-{{rand_uint64}}"
 			/>
 			<button
 				up-href="/foods/new"

@@ -46,15 +46,11 @@ func CookingUpdate(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func CookingAddFood(w http.ResponseWriter, r *http.Request) error {
-	return nil
-}
-
 func CookingGroupFoods(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func CookingAddCooking(w http.ResponseWriter, r *http.Request) error {
+func CookingAddSubCooking(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
@@ -64,13 +60,14 @@ func CookingListAvailableFoods(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	foods, err := ksqlite.FindCookingAvailableFoods(
-		s.User.ID,
-		r.PathValue("id"),
-		r.URL.Query().Get("search"),
-	)
+	cookingID := r.PathValue("id")
+	search := r.URL.Query().Get("search")
+	foods, err := ksqlite.FindCookingAvailableFoods(s.User.ID, cookingID, search)
 	if err != nil {
-		return fmt.Errorf("find foods: %w", err)
+		return internal.NewSErr(
+			fmt.Errorf("bad search: %w", internal.ErrInvalid),
+			fmt.Errorf("find foods: %w", err),
+		)
 	}
 
 	type foodTmpl struct {
@@ -93,8 +90,10 @@ func CookingListAvailableFoods(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
-	return tmpl.ExecuteTemplate(w, "foods_list", newData(map[any]any{
-		"foods":   foodsTmpl,
-		"session": s,
+	return tmpl.ExecuteTemplate(w, "cooking_available_foods", newData(map[any]any{
+		"foods":     foodsTmpl,
+		"session":   s,
+		"search":    search,
+		"cookingID": cookingID,
 	}))
 }

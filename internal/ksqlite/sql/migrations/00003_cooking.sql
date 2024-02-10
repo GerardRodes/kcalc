@@ -11,9 +11,8 @@ create table cookings (
 create table rel_cookings_foods (
 	cooking_id integer references cookings(id) not null,
 	food_id integer references foods(id) not null,
-	g real not null default 0,
-	primary key(cooking_id, food_id)
-) without rowid;
+	g real not null default 0
+);
 
 create table rel_cookings_cookings (
 	cooking_id integer references cookings(id) not null,
