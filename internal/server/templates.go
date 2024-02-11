@@ -60,6 +60,17 @@ var tmpl = template.New("").Funcs(template.FuncMap{
 
 		return ""
 	},
+	"map": func(m map[any]any, kv ...any) map[any]any {
+		if m == nil {
+			m = map[any]any{}
+		}
+
+		for i := 0; i < len(kv); i += 2 {
+			m[kv[i]] = kv[i+1]
+		}
+
+		return m
+	},
 })
 
 func init() {
@@ -79,5 +90,6 @@ func newData(data map[any]any) map[any]any {
 	data["langID"] = internal.LangsID["en"]
 	data["langByID"] = internal.LangByID
 	data["sourceByID"] = internal.SourceByID
+	data["isProd"] = internal.IsProd
 	return data
 }

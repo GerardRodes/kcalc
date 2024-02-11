@@ -43,6 +43,7 @@ func Serve(ctx context.Context) error {
 		router.Handle("GET /cookings/{id}", NewHandler(CookingView))
 		router.Handle("PATCH /cookings/{id}", NewHandler(CookingUpdate))
 		router.Handle("GET /cookings/{id}/available-foods", NewHandler(CookingListAvailableFoods))
+		router.Handle("POST /cookings/{id}/foods", NewHandler(CookingAddFood))
 		router.Handle("POST /cookings/{id}/group", NewHandler(CookingGroupFoods))
 		router.Handle("POST /cookings/{id}/cookings/{subCookingID}", NewHandler(CookingAddSubCooking))
 	}

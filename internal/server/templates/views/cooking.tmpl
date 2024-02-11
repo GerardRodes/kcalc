@@ -2,7 +2,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	{{ template "head" "Cooking" }}
+	<title>kcalc | Cooking</title>
+	{{ template "head" . }}
 </head>
 <body>
 	<h1>Cooking</h1>
@@ -10,27 +11,83 @@
 
 	<div>
 		<form
-			method="get"
-			action="/cookings/{{.cooking.ID}}/available-foods"
-			up-watch-delay="150"
-			up-focus="keep"
-			up-target="#foods-list"
-			up-autosubmit
+			method="post"
+			action="/cookings/{{.cooking.ID}}/foods"
+			id="form-add-food"
+			enctype="multipart/form-data"
 		>
+			<input type="text" name="id" style="width: 3em;">
 			<input
-				type="text"
-				placeholder="search foods"
-				name="search"
-				autocomplete="nope-{{rand_uint64}}"
+				type="text" name="name" required placeholder="alimento"
+				up-watch-feedback
+				up-abort
+				up-watch-delay="100"
+				up-watch="return showFoodsList(value)"
 			/>
-			<button
-				up-href="/foods/new"
-				up-layer="new"
-				up-mode="modal"
-				up-target="form"
-			>create new food</button>
+			<input style="width: 3em;" type="number" placeholder="kcal" required min="0" step=".01" name="kcal">
+			<input style="width: 5em;" type="number" placeholder="gramos" required min="0" step=".01" name="g">
+			<button type="submit" >+</button>
+			<br>
+			<input type="file" id="photo" name="photo" accept="image/*">
+			<script>
+				const id = up.element.get('#form-add-food [name=id]')
+				const name = up.element.get('#form-add-food [name=name]')
+				const kcal = up.element.get('#form-add-food [name=kcal]')
+				function showFoodsList (value) {
+					return up.render({
+						abort: 'all',
+						target: '#foods-list',
+						url: '/cookings/{{.cooking.ID}}/available-foods',
+						params: { search: value },
+					})
+				}
+				function clearID () {
+					id.value = ""
+				}
+				up.watch(name, clearID)
+				up.watch(kcal, clearID)
+				up.on('food:select', e => {
+					id.value = e.id
+					name.value = e.name
+					kcal.value = e.kcal
+				})
+			</script>
 		</form>
-		<div id="foods-list"></div>
+		<div
+			style="
+				max-width: 100%;
+				max-height: 15rem;
+				overflow-x: hidden;
+				overflow-y: scroll;
+			">
+			<style>
+				#foods-list a {
+					display: flex;
+					width: 100%;
+					align-items: center;
+				}
+				#foods-list a:hover {
+					background-color: beige;
+				}
+				#foods-list a > div:nth-child(1) {
+					height: 2rem;
+					width: 2rem;
+					padding: 3px;
+				}
+				#foods-list a img {
+					max-width: 100%;
+					aspect-ratio: 1/1;
+					border-radius: 5px;
+				}
+				#foods-list a > div:nth-child(2) {
+					padding: 0 0.5rem;
+				}
+				#foods-list a > div:nth-child(3) {
+					flex-grow: 1;
+				}
+			</style>
+			<div id="foods-list"></div>
+		</div>
 	</div>
 </body>
 </html>

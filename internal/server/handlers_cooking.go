@@ -46,6 +46,24 @@ func CookingUpdate(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+func CookingAddFood(w http.ResponseWriter, r *http.Request) error {
+	type req struct {
+		ID    int64
+		Name  string  `val:"required"`
+		Kcal  float64 `val:"required"`
+		G     float64 `val:"required"`
+		Photo internal.Image
+	}
+
+	_, err := parseReq[req](r)
+	if err != nil {
+		return err
+	}
+
+	// spew.Dump(vals)
+	return nil
+}
+
 func CookingGroupFoods(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
@@ -74,19 +92,36 @@ func CookingListAvailableFoods(w http.ResponseWriter, r *http.Request) error {
 		ID    int64
 		Name  string
 		Image internal.Image
+		KCal  string
 	}
 	foodsTmpl := make([]foodTmpl, len(foods))
 	for i, food := range foods {
 		foodsTmpl[i].ID = food.ID
 		foodsTmpl[i].Name = food.Name(s.User.Lang)
 
-		if img, ok := food.ImageByUser[s.User.ID]; ok && img.URI != "" {
-			foodsTmpl[i].Image = img
-		} else {
-			for _, img := range food.ImageBySource {
-				foodsTmpl[i].Image = img
-				break
+		{ // image
+			var ok bool
+			foodsTmpl[i].Image, ok = food.ImageByUser[s.User.ID]
+
+			if !ok {
+				for _, img := range food.ImageBySource {
+					foodsTmpl[i].Image = img
+					break
+				}
 			}
+		}
+
+		{ // details
+			details, ok := food.DetailByUser[s.User.ID]
+
+			if !ok {
+				for _, d := range food.DetailBySource {
+					details = d
+					break
+				}
+			}
+
+			foodsTmpl[i].KCal = fmt.Sprintf("%0.2f", details.KCal)
 		}
 	}
 

@@ -9,3 +9,4 @@
   - agrupar alimentos y seleccionarles un nuevo peso despues del cocinado
 - lang from headers
 - i18n
+- gzip (a no, lo hara coddy)

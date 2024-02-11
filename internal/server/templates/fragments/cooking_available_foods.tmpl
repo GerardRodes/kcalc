@@ -5,22 +5,15 @@
 {{ end }}
 {{ range .foods }}
 	<a
-		style="display: flex;"
   	up-emit='food:select'
-  	up-emit-props='{"id":{{.ID}},"name":"{{.Name}}"}'
-	>
-		<div
-			style="
-				height: 2rem;
-				width: 2rem;
-			"
-		>
+  	up-emit-props='{"id":"{{.ID}}","name":"{{.Name}}","kcal":"{{ .KCal }}"}'>
+		<div>
 			{{ if .Image.URI | len }}
-				<img
-					style="max-width: 100%; aspect-ratio: 1/1;"
-					src="/content/{{.Image.URI}}"
-				/>
+				<img src="/content/{{.Image.URI}}" />
 			{{ end }}
+		</div>
+		<div>
+			{{ .KCal }}
 		</div>
 		<div>
 			{{ .Name }}
