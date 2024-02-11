@@ -25,7 +25,7 @@ func FoodsList(w http.ResponseWriter, r *http.Request) error {
 	search := r.URL.Query().Get("search")
 	foods, err := ksqlite.FindFoods(search)
 	if err != nil {
-		return internal.NewSErr(
+		return internal.NewPubErr(
 			fmt.Errorf("bad search: %w", internal.ErrInvalid),
 			fmt.Errorf("find foods: %w", err),
 		)
@@ -88,12 +88,12 @@ func FoodsNew(w http.ResponseWriter, r *http.Request) error {
 		case "kcal":
 			kcal, err = strconv.ParseFloat(vals[0], 64)
 			if err != nil {
-				return internal.NewSErr(errors.New("invalid kcal format"), err)
+				return internal.NewPubErr(errors.New("invalid kcal format"), err)
 			}
 		case "g":
 			g, err = strconv.ParseFloat(vals[0], 64)
 			if err != nil {
-				return internal.NewSErr(errors.New("invalid g format"), err)
+				return internal.NewPubErr(errors.New("invalid g format"), err)
 			}
 		}
 	}

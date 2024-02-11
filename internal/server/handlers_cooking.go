@@ -2,10 +2,12 @@ package server
 
 import (
 	"fmt"
+	"mime/multipart"
 	"net/http"
 
 	"github.com/GerardRodes/kcalc/internal"
 	"github.com/GerardRodes/kcalc/internal/ksqlite"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/segmentio/ksuid"
 )
 
@@ -49,18 +51,18 @@ func CookingUpdate(w http.ResponseWriter, r *http.Request) error {
 func CookingAddFood(w http.ResponseWriter, r *http.Request) error {
 	type req struct {
 		ID    int64
-		Name  string  `val:"required"`
-		Kcal  float64 `val:"required"`
-		G     float64 `val:"required"`
-		Photo internal.Image
+		Name  string  `validate:"required"`
+		Kcal  float64 `validate:"required"`
+		G     float64 `validate:"required"`
+		Photo *multipart.FileHeader
 	}
 
-	_, err := parseReq[req](r)
+	data, err := parseReq[req](r)
 	if err != nil {
 		return err
 	}
 
-	// spew.Dump(vals)
+	spew.Dump(data)
 	return nil
 }
 
@@ -82,7 +84,7 @@ func CookingListAvailableFoods(w http.ResponseWriter, r *http.Request) error {
 	search := r.URL.Query().Get("search")
 	foods, err := ksqlite.FindCookingAvailableFoods(s.User.ID, cookingID, search)
 	if err != nil {
-		return internal.NewSErr(
+		return internal.NewPubErr(
 			fmt.Errorf("bad search: %w", internal.ErrInvalid),
 			fmt.Errorf("find foods: %w", err),
 		)

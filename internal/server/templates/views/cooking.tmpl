@@ -4,12 +4,40 @@
 <head>
 	<title>kcalc | Cooking</title>
 	{{ template "head" . }}
+
+	<script>
+		function showFoodsList (value) {
+			return up.render({
+				abort: 'all',
+				target: '#foods-list',
+				url: '/cookings/{{.cooking.ID}}/available-foods',
+				params: { search: value },
+			})
+		}
+
+		up.compiler('#cooking-food-manager', function name(element) {
+			const id = element.querySelector('#form-add-food [name=id]')
+			const name = element.querySelector('#form-add-food [name=name]')
+			const kcal = element.querySelector('#form-add-food [name=kcal]')
+			function clearID () {
+				id.value = ""
+			}
+			up.watch(name, clearID)
+			up.watch(kcal, clearID)
+			up.watch(name, { delay: 100 }, showFoodsList)
+			up.on('food:select', e => {
+				id.value = e.id
+				name.value = e.name
+				kcal.value = e.kcal
+			})
+		})
+	</script>
 </head>
 <body>
 	<h1>Cooking</h1>
 	<pre>{{ .cooking | dump }}</pre>
 
-	<div>
+	<div id="cooking-food-manager">
 		<form
 			method="post"
 			action="/cookings/{{.cooking.ID}}/foods"
@@ -17,41 +45,12 @@
 			enctype="multipart/form-data"
 		>
 			<input type="text" name="id" style="width: 3em;">
-			<input
-				type="text" name="name" required placeholder="alimento"
-				up-watch-feedback
-				up-abort
-				up-watch-delay="100"
-				up-watch="return showFoodsList(value)"
-			/>
+			<input type="text" name="name" required placeholder="alimento"/>
 			<input style="width: 3em;" type="number" placeholder="kcal" required min="0" step=".01" name="kcal">
 			<input style="width: 5em;" type="number" placeholder="gramos" required min="0" step=".01" name="g">
 			<button type="submit" >+</button>
 			<br>
 			<input type="file" id="photo" name="photo" accept="image/*">
-			<script>
-				const id = up.element.get('#form-add-food [name=id]')
-				const name = up.element.get('#form-add-food [name=name]')
-				const kcal = up.element.get('#form-add-food [name=kcal]')
-				function showFoodsList (value) {
-					return up.render({
-						abort: 'all',
-						target: '#foods-list',
-						url: '/cookings/{{.cooking.ID}}/available-foods',
-						params: { search: value },
-					})
-				}
-				function clearID () {
-					id.value = ""
-				}
-				up.watch(name, clearID)
-				up.watch(kcal, clearID)
-				up.on('food:select', e => {
-					id.value = e.id
-					name.value = e.name
-					kcal.value = e.kcal
-				})
-			</script>
 		</form>
 		<div
 			style="

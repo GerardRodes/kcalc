@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/GerardRodes/kcalc/internal"
-	"github.com/davecgh/go-spew/spew"
+	"github.com/rs/zerolog/log"
 )
 
 func parseReq[T any](r *http.Request) (T, error) {
@@ -21,54 +21,129 @@ func parseReq[T any](r *http.Request) (T, error) {
 func parseReqMultipart[T any](r *http.Request) (T, error) {
 	var zero T
 
-	rt := reflect.TypeOf(zero)
-	spew.Dump(rt)
+	if err := r.ParseMultipartForm(1024 * 4); err != nil {
+		return zero, fmt.Errorf("parse multipart form: %w", err)
+	}
 
-	// todo: cache this
-	fields := make(map[string]func(string) (any, error), rt.NumField())
+	zeroT := reflect.TypeOf(zero)
+	zeroPtrV := reflect.ValueOf(&zero)
+	zeroElem := zeroPtrV.Elem()
 
-	for i := 0; i < rt.NumField(); i++ {
-		rf := rt.Field(i)
-		spew.Dump(rf)
+	type fieldt struct {
+		rf         reflect.StructField
+		parser     func(any) (any, error)
+		validators []func(any) error
+	}
 
-		switch rf.Type.Kind() {
-		case reflect.String:
-			fields[strings.ToLower(rf.Name)] = func(val string) (any, error) {
-				return val, nil
-			}
-		case reflect.Int64:
-			fields[strings.ToLower(rf.Name)] = func(val string) (any, error) {
-				out, err := strconv.ParseInt(val, 10, 64)
-				if err != nil {
-					return nil, internal.NewSErr(errors.New("invalid kcal format"), err)
-				}
+	fields := make(map[string]fieldt, zeroT.NumField())
 
-				return out, nil
-			}
-		case reflect.Float64:
-			fields[strings.ToLower(rf.Name)] = func(val string) (any, error) {
-				out, err := strconv.ParseFloat(val, 64)
-				if err != nil {
-					return nil, internal.NewSErr(errors.New("invalid kcal format"), err)
-				}
+	for i := 0; i < zeroT.NumField(); i++ {
+		rf := zeroT.Field(i)
 
-				return out, nil
-			}
-		case reflect.Struct:
-			switch rf.Type.PkgPath() {
-			case "github.com/GerardRodes/kcalc/internal.Image":
-				switch rf.Type.Name() {
-				case "Image":
-					fields[strings.ToLower(rf.Name)] = func(name string) (any, error) {
-						spew.Dump("internal.Image", name)
-						return nil, nil
-					}
-				}
-			}
-		default:
-			panic(fmt.Sprintf("unsupported field kind %q", rf.Type.Kind()))
+		fields[strings.ToLower(rf.Name)] = fieldt{
+			rf:         rf,
+			parser:     getFieldParser(rf.Type),
+			validators: parseValidators(rf.Tag.Get("validate")),
 		}
 	}
 
+	for name, vals := range r.MultipartForm.Value {
+		if vals[0] == "" {
+			continue
+		}
+
+		f, ok := fields[strings.ToLower(name)]
+		if !ok {
+			log.Debug().Str("field", name).Msg("skip missing field")
+			continue
+		}
+
+		val, err := f.parser(vals[0])
+		if err != nil {
+			return zero, err
+		}
+
+		zeroElem.FieldByIndex(f.rf.Index).Set(reflect.ValueOf(val))
+	}
+
+	for name, f := range fields {
+		for _, v := range f.validators {
+			if err := v(zeroElem.FieldByIndex(f.rf.Index).Interface()); err != nil {
+				return zero, internal.NewPubErr(fmt.Errorf("%w %q: %s", internal.ErrInvalid, name, err), nil)
+			}
+		}
+	}
+
+	for name, vals := range r.MultipartForm.File {
+		f, ok := fields[strings.ToLower(name)]
+		if !ok {
+			log.Debug().Str("field", name).Msg("skip missing field file")
+			continue
+		}
+
+		zeroElem.FieldByIndex(f.rf.Index).Set(reflect.ValueOf(vals[0]))
+	}
+
 	return zero, nil
+}
+
+func getFieldParser(t reflect.Type) func(val any) (any, error) {
+	switch t.Kind() {
+	case reflect.Int64:
+		return func(val any) (any, error) {
+			out, err := strconv.ParseInt(val.(string), 10, 64)
+			if err != nil {
+				return nil, internal.NewPubErr(internal.ErrInvalid, err)
+			}
+
+			return out, nil
+		}
+	case reflect.Float64:
+		return func(val any) (any, error) {
+			out, err := strconv.ParseFloat(val.(string), 64)
+			if err != nil {
+				return nil, internal.NewPubErr(internal.ErrInvalid, err)
+			}
+
+			return out, nil
+		}
+		// case reflect.Ptr:
+		// 	switch {
+		// 	case t.AssignableTo(reflect.TypeOf(&multipart.FileHeader{})):
+		// 		return func(val any) (any, error) {
+		// 			return val, nil
+		// 		}
+		// 	}
+		// case reflect.Struct:
+		// 	switch {
+		// 	}
+	}
+
+	return func(val any) (any, error) {
+		return val, nil
+	}
+}
+
+func parseValidators(tag string) (out []func(any) error) {
+	if len(tag) == 0 {
+		return
+	}
+
+	for _, part := range strings.Split(tag, ";") {
+		switch part {
+		case "required":
+			out = append(out, func(a any) error {
+				v := reflect.ValueOf(a)
+				if v.IsZero() {
+					return errors.New("required")
+				}
+
+				return nil
+			})
+		default:
+			panic(fmt.Sprintf("unknown validator: %q", part))
+		}
+	}
+
+	return
 }

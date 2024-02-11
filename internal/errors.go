@@ -36,22 +36,22 @@ func NewErrWithStackTrace(err error) error {
 	}
 }
 
-// SErr stands for Sensitive Error
-type SErr struct {
+// PubErr stands for Sensitive Error
+type PubErr struct {
 	Public, Private error
 }
 
-func NewSErr(public, private error) SErr {
-	return SErr{
+func NewPubErr(public, private error) PubErr {
+	return PubErr{
 		Public:  public,
 		Private: private,
 	}
 }
 
-func (e SErr) Error() string {
+func (e PubErr) Error() string {
 	return e.Public.Error()
 }
 
-func (e SErr) Unwrap() error {
+func (e PubErr) Unwrap() error {
 	return e.Public
 }

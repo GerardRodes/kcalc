@@ -26,7 +26,7 @@ func errorHandler(w http.ResponseWriter, err error) {
 	code := http.StatusInternalServerError
 	pub := errors.New(http.StatusText(http.StatusInternalServerError))
 
-	var serr internal.SErr
+	var serr internal.PubErr
 	if errors.As(err, &serr) {
 		pub = serr.Public
 		priv = serr.Private
