@@ -7,7 +7,6 @@ import (
 
 	"github.com/GerardRodes/kcalc/internal"
 	"github.com/GerardRodes/kcalc/internal/ksqlite"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/segmentio/ksuid"
 )
 
@@ -33,10 +32,13 @@ func CookingView(w http.ResponseWriter, r *http.Request) error {
 }
 
 func CookingNew(w http.ResponseWriter, r *http.Request) error {
-	const userID = 0
+	s, err := SessionFromReq(r)
+	if err != nil {
+		return err
+	}
 
 	id := ksuid.New().String()
-	if err := ksqlite.NewCooking(userID, id); err != nil {
+	if err := ksqlite.NewCooking(s.User.ID, id); err != nil {
 		return fmt.Errorf("new cooking: %w", err)
 	}
 
@@ -49,10 +51,15 @@ func CookingUpdate(w http.ResponseWriter, r *http.Request) error {
 }
 
 func CookingAddFood(w http.ResponseWriter, r *http.Request) error {
+	s, err := SessionFromReq(r)
+	if err != nil {
+		return err
+	}
+
 	type req struct {
 		ID    int64
 		Name  string  `validate:"required"`
-		Kcal  float64 `validate:"required"`
+		Kcal  float64 `validate:"required"` //todo:min:0
 		G     float64 `validate:"required"`
 		Photo *multipart.FileHeader
 	}
@@ -62,7 +69,22 @@ func CookingAddFood(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	spew.Dump(data)
+	uri, err := storeImage(data.Photo)
+	if err != nil {
+		return err
+	}
+
+	if data.ID <= 0 {
+		// create food
+	}
+
+	_ = uri
+	// todo:
+	// ksqlite.CookingAddFood(s.User.ID, r.PathValue("id"), internal.CookingFood{
+	// 	Food: internal.Food{},
+	// 	G:    data.G,
+	// })
+
 	return nil
 }
 

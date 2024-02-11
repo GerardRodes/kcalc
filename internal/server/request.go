@@ -3,12 +3,15 @@ package server
 import (
 	"errors"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"reflect"
 	"strconv"
 	"strings"
 
 	"github.com/GerardRodes/kcalc/internal"
+	"github.com/GerardRodes/kcalc/internal/fsstorage"
 	"github.com/rs/zerolog/log"
 )
 
@@ -146,4 +149,24 @@ func parseValidators(tag string) (out []func(any) error) {
 	}
 
 	return
+}
+
+func storeImage(fh *multipart.FileHeader) (string, error) {
+	f, err := fh.Open()
+	if err != nil {
+		return "", fmt.Errorf("open file header: %w", err)
+	}
+	defer f.Close()
+
+	fdata, err := io.ReadAll(f)
+	if err != nil {
+		return "", fmt.Errorf("read all file: %w", err)
+	}
+
+	uri, err := fsstorage.StoreImage(fdata, fh.Header.Get("content-type"))
+	if err != nil {
+		return "", fmt.Errorf("store image: %w", err)
+	}
+
+	return uri, nil
 }

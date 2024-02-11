@@ -3,12 +3,10 @@ package server
 import (
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"strconv"
 
 	"github.com/GerardRodes/kcalc/internal"
-	"github.com/GerardRodes/kcalc/internal/fsstorage"
 	"github.com/GerardRodes/kcalc/internal/ksqlite"
 )
 
@@ -101,20 +99,9 @@ func FoodsNew(w http.ResponseWriter, r *http.Request) error {
 
 	if fhs, ok := r.MultipartForm.File["photo"]; ok && len(fhs) > 0 {
 		for _, fh := range fhs {
-			f, err := fh.Open()
+			uri, err := storeImage(fh)
 			if err != nil {
-				return fmt.Errorf("open file header: %w", err)
-			}
-			defer f.Close()
-
-			fdata, err := io.ReadAll(f)
-			if err != nil {
-				return fmt.Errorf("read all file: %w", err)
-			}
-
-			uri, err := fsstorage.StoreImage(fdata, fh.Header.Get("content-type"))
-			if err != nil {
-				return fmt.Errorf("store image: %w", err)
+				return err
 			}
 
 			food.ImageByUser[userID] = internal.Image{URI: uri}
